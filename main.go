@@ -2035,35 +2035,29 @@ func isLoggedIn(r *http.Request) bool {
 }
 
 func main() {
-	// Load .env file, but don't make it fatal if it's not found,
-	// as environment variables will be set directly in Render.
+	// Load .env file - primarily for local development.
+	// Render uses environment variables set in its UI.
 	err := godotenv.Load()
 	if err != nil && !os.IsNotExist(err) {
 		// Log error only if it's something other than "file not found"
 		log.Printf("Warning: Error loading .env file: %v", err)
 	}
 
-	// DB is initialized in db.go (which uses environment variables now)
-	// Assuming DB is a global variable initialized in db.go init()
-	if DB == nil {
-		// This check might be redundant if init() guarantees DB is set or panics,
-		// but it's safer to leave it for now.
-		log.Fatal("Database connection (DB) is nil. Check db.go initialization.")
-		return
-	}
-	// defer DB.Close() should only be called once for the global DB connection
+	// DB is initialized globally in db.go's init()
+	// Ensure DB connection is closed when main function exits.
+	// Call defer DB.Close() ONLY ONCE.
 	defer DB.Close()
 
 	// Setup Chi router
 	router := chi.NewRouter()
-	router.Use(middleware.Logger) // Use Chi's logger middleware
+	router.Use(middleware.Logger) // Add request logging
 
-	// Serve static files and uploads
-	// Ensure the paths "uploads" and "static" are correct relative to the executable
-	router.Handle("/uploads/*", http.StripPrefix("/uploads/", http.FileServer(http.Dir("uploads"))))
-	router.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	// Serve static files and user uploads
+	router.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
+	router.Handle("/uploads/*", http.StripPrefix("/uploads/", http.FileServer(http.Dir("./uploads"))))
 
-	// --- Route definitions ---
+	// --- Define Routes ONLY ONCE ---
+	// Core routes
 	router.Get("/", homeHandler)
 	router.Get("/ad/{adID}", adDetailHandler)
 	router.Get("/signup", signupHandler)
@@ -2073,36 +2067,47 @@ func main() {
 	router.Get("/logout", logoutHandler)
 	router.Get("/post-ad", postAdHandler)
 	router.Post("/post-ad", postAdHandler)
+
+	// Account routes
 	router.Get("/account", accountHandler)
+	router.Get("/account/messages", messagesHandler) // Specific messages page
 	router.Post("/edit-ad", editAdHandler)
 	router.Post("/delete-ad", deleteAdHandler)
+
+	// API/AJAX routes
 	router.Get("/fetch-ads", fetchAdsHandler)
 	router.Get("/forward-geocode", forwardGeocodeHandler)
 	router.Post("/filter-ads", filterAdsHandler)
 	router.Get("/fetch-by-subcategory", fetchBySubcategoryHandler)
+	router.Get("/geocode", geocodeHandler) // Reverse geocode
+
+	// Verification routes
 	router.Get("/verify/{token}", verificationHandler)
+
+	// Chat routes
 	router.Get("/ws", chatWebSocketHandler)
 	router.Post("/send-message", sendMessageHandler)
 	router.Get("/get-conversation", getConversationHandler)
 	router.Get("/user-status", userStatusHandler)
-	router.Get("/account/messages", messagesHandler)
-	router.Get("/geocode", geocodeHandler)
+
+	// Password reset routes
 	router.Get("/password/reset", forgotPasswordPage)
 	router.Get("/reset-password", resetPasswordPage)
 	router.Post("/api/forgot-password", forgotPasswordHandler)
 	router.Post("/api/reset-password", resetPasswordHandler)
 	// --- End of Route definitions ---
 
-	// === Port Configuration ===
+	// === Port Configuration (ONLY ONCE) ===
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080" // Default for local development
 		log.Printf("Defaulting to port %s for local development", port)
 	}
 	serverAddress := ":" + port
-	// ==========================
+	// =====================================
 
-	// Start the server
+	// === Start Server (ONLY ONCE) ===
 	fmt.Printf("🚀 Server starting on %s\n", serverAddress)
 	log.Fatal(http.ListenAndServe(serverAddress, router))
+	// ==============================
 }
