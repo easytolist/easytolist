@@ -1,0 +1,656 @@
+/* ==========================================================================
+   GENERAL STYLES
+   ========================================================================== */
+   body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    background-color: #e2f1ff; /* Light blue background */
+}
+
+/* ==========================================================================
+   HEADER & NAVIGATION
+   ========================================================================== */
+/* Header */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    position: relative;
+    border-bottom: 1px solid #0000002b;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: 1rem;
+}
+
+.logo-container a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.company-name {
+    color: #1DBFC1;
+    font-weight: bold;
+    font-size: 1.5rem;
+    transition: transform 0.3s ease;
+}
+
+.company-name:hover {
+    transform: scale(1.05);
+}
+
+.logo {
+    max-width: 50px;
+    height: auto;
+    transition: transform 0.3s ease;
+}
+
+.logo:hover {
+    transform: scale(1.05);
+}
+
+/* Home Navigation Links */
+.home-links {
+    display: flex;
+    gap: 2rem;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.home-links a {
+    color: #333;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.home-links a:hover {
+    color: #1DBFC1;
+}
+
+/* Right-side Navigation */
+.main-links {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-right: 1rem;
+}
+
+.post-ad-btn {
+    background: #1DBFC1;
+    color: white !important;
+    padding: 0.5rem 1.5rem;
+    border-radius: 20px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.post-ad-btn:hover {
+    background: white;
+    color: #1DBFC1 !important;
+    border-color: #1DBFC1;
+}
+
+.main-links a:not(.post-ad-btn) {
+    color: #333;
+    text-decoration: none;
+    transition: color 0.3s ease;
+    font-weight: bold;
+}
+
+.main-links a:not(.post-ad-btn):hover {
+    color: #1DBFC1;
+}
+
+/* Account Dropdown */
+.account-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    min-width: 150px;
+    z-index: 1000;
+    border-radius: 5px;
+    padding: 0.5rem 0;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.dropdown-menu.show {
+    display: flex;
+    animation: slideDown 0.3s ease;
+}
+
+.dropdown-menu a {
+    padding: 0.5rem 1rem;
+    color: #333;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    width: 80%;
+    text-align: left;
+    transition: all 0.3s ease;
+}
+
+.dropdown-menu a:last-child {
+    border-bottom: none;
+}
+
+.dropdown-menu a:hover {
+    background: rgba(29, 191, 193, 0.1);
+    color: #1DBFC1;
+}
+
+.user-icon {
+    width: 32px;
+    height: 32px;
+    transition: transform 0.3s ease;
+    display: block;
+}
+
+.user-icon:hover {
+    transform: scale(1.1);
+}
+
+/* Dropdown Animation */
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================================================
+   MOBILE RESPONSIVE (Header & Nav)
+   ========================================================================== */
+@media (max-width: 768px) {
+    header { padding: 1rem; }
+    .logo-container { margin-left: 0; flex: 1; }
+    .home-links { display: none; }
+    .main-links {
+        margin-right: 0;
+        gap: 0.8rem;
+        justify-content: flex-end;
+        flex: 1;
+    }
+    .post-ad-btn {
+        order: 1;
+        padding: 0.4rem 1rem;
+        font-size: 0.9rem;
+    }
+    .account-dropdown { order: 2; }
+    .user-icon { width: 28px; height: 28px; }
+    .dropdown-menu { right: 0; min-width: 160px; }
+    .dropdown-menu.mobile-dropdown {
+        display: none;
+        position: fixed;
+        top: 60px;
+        left: 50%;
+        transform: translateX(-5%);
+        width: 50%;
+        max-width: 300px;
+    }
+    .dropdown-menu.mobile-dropdown.show { display: flex; }
+    .dropdown-menu.mobile-dropdown a { width: 100%; }
+}
+
+@media (min-width: 769px) {
+    .dropdown-menu.mobile-dropdown { display: none !important; }
+}
+
+@media (max-width: 768px) {
+    .dropdown-menu.desktop-dropdown { display: none !important; }
+}
+
+/* ==========================================================================
+   ACCOUNT PAGE STYLES
+   ========================================================================== */
+.account-container {
+    display: flex;
+    min-height: calc(100vh - 80px);
+    padding: 20px;
+    gap: 30px;
+}
+
+.account-sidebar {
+    flex: 0 0 250px;
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.account-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px 20px;
+    font-size: 1.1rem;
+    color: #333;
+    transition: all 0.3s ease;
+}
+
+.menu-item:hover,
+.menu-item.active {
+    background: rgba(29, 191, 193, 0.1) !important;
+    color: #1DBFC1 !important;
+}
+
+.menu-item:hover .menu-icon,
+.menu-item.active .menu-icon {
+    filter: invert(58%) sepia(90%) saturate(385%) hue-rotate(142deg) brightness(89%) contrast(87%);
+}
+
+.menu-icon {
+    width: 24px;
+    height: 24px;
+    transition: filter 0.3s ease;
+}
+
+.signout {
+    color: #ff4444 !important;
+    font-weight: bold;
+    font-size: 1.1rem !important;
+    margin-top: 20px;
+}
+
+.signout:hover {
+    background: rgb(255 0 0 / 0%) !important;
+}
+
+.account-content {
+    flex: 1;
+    background: white;
+    border-radius: 8px;
+    padding: 30px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.content-section {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.content-section.active {
+    display: block;
+}
+
+.profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding-bottom: 1rem;
+    margin-bottom: 2rem;
+}
+
+.subsection {
+    display: none;
+}
+
+.subsection.active {
+    display: block;
+    animation: slideIn 0.3s ease;
+}
+
+.info-card {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 500px;
+}
+
+.password-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 400px;
+}
+
+.profile-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn-secondary {
+    background: #1DBFC1;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background: #169597;
+}
+
+.info-card p {
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.info-card p:last-child {
+    border-bottom: none;
+}
+
+.password-form input {
+    padding: 0.8rem;
+    margin-bottom: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+/* ==========================================================================
+   MEMBERSHIP SECTION STYLES
+   ========================================================================== */
+.membership-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding-bottom: 1rem;
+    margin-bottom: 2rem;
+}
+
+.membership-buttons {
+    display: flex;
+    gap: 1rem;
+}
+
+.membership-buttons .btn-primary {
+    padding: 0.5rem 1rem;
+    border: none;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.membership-buttons .btn-primary.active,
+.membership-buttons .btn-primary:hover {
+    background: #1DBFC1;
+    color: white;
+}
+
+/* Plan Details */
+.plan-details {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.plan-details.active {
+    display: block;
+}
+
+.plan-item {
+    padding: 1.2rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.bold-gap {
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.plan-item:last-child {
+    border-bottom: none;
+}
+
+/* ==========================================================================
+   MANAGE ADS SECTION STYLES
+   ========================================================================== */
+.ads-list {
+    display: grid;
+    gap: 2rem;
+    padding: 1rem;
+}
+
+.ad-item {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    transition: transform 0.3s ease;
+}
+
+.ad-item:hover {
+    transform: translateY(-3px);
+}
+
+/* Carousel */
+.carousel {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.carousel-inner {
+    display: flex;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.carousel-item {
+    min-width: 100%;
+    transition: transform 0.5s ease;
+}
+
+/* Updated Carousel Image: contain & max-height */
+#manage-ads .carousel-item img {
+    width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+}
+
+/* Title & Description styling */
+#manage-ads .ad-item h3,
+#manage-ads .ad-item p {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.3);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+#manage-ads .ad-item h3 {
+    color: #1DBFC1;
+}
+
+/* Edit mode */
+.edit-mode {
+    display: none;
+}
+
+.edit-mode.active {
+    display: block;
+    animation: slideIn 0.3s ease;
+}
+
+/* Image Manager */
+.image-manager {
+    margin-bottom: 1rem;
+}
+
+.existing-images {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.image-preview {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    animation: fadeIn 0.3s ease;
+}
+
+.image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+/* Delete image button */
+.delete-image {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(255, 0, 0, 0.7);
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.delete-image:hover {
+    background: red;
+}
+
+/* Form Actions & Edit Mode Inputs */
+.form-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+#manage-ads .edit-mode label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 0.3rem;
+}
+
+#manage-ads .edit-mode input[type="text"],
+#manage-ads .edit-mode textarea {
+    display: block;
+    width: 100%;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* Edit & Delete Buttons */
+#manage-ads .ad-actions .edit-ad {
+    background-color: #1DBFC1;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    margin-right: 0.5rem;
+}
+
+#manage-ads .ad-actions .edit-ad:hover {
+    background-color: #169597;
+}
+
+#manage-ads .ad-actions .delete-ad {
+    background-color: red;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+#manage-ads .ad-actions .delete-ad:hover {
+    background-color: darkred;
+}
+
+/* Cancel & Save Button Styles in Edit Mode */
+#manage-ads .edit-mode .form-actions button.cancel-edit {
+    background-color: red;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+#manage-ads .edit-mode .form-actions button.cancel-edit:hover {
+    background-color: darkred;
+}
+
+#manage-ads .edit-mode .form-actions button.save-changes {
+    background-color: #1DBFC1;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+#manage-ads .edit-mode .form-actions button.save-changes:hover {
+    background-color: #169597;
+}
+
+/* Ensure full width for edit mode inputs */
+#manage-ads .edit-mode .image-manager,
+#manage-ads .edit-mode input[type="text"],
+#manage-ads .edit-mode textarea {
+    width: 100%;
+}
+
+/* ==========================================================================
+   CONVERSATION & CHAT STYLES
+   ========================================================================== */
+.conversation-list {
+    border: 1px solid #ccc;
+    padding: 10px;
+    max-height: 400px;
+    overflow-y: auto;
+    margin-top: 10px;
+}
+
+.conversation-item {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+}
+
+.conversation-item:hover {
+    background-color: #f9f9f9;
+}
+
+/* ==========================================================================
+   ANIMATIONS
+   ========================================================================== */
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+}

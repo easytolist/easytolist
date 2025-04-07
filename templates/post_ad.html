@@ -1,0 +1,567 @@
+{{template "base.html" .}}
+
+{{define "title"}}Post Your Ad - EasyToList{{end}}
+
+{{define "head_extra"}}
+<!-- Include Choices.js CSS and local stylesheet -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+<link rel="stylesheet" href="/static/post_ad.css">
+{{end}}
+
+{{define "content"}}
+
+<!-- Main container for Post Ad form -->
+<div class="container">
+<h1>Post Ad</h1>
+<form id="postForm" enctype="multipart/form-data" method="POST">
+
+<!-- 1. Title Input Field -->
+<div class="form-group">
+<label>Title:</label>
+<input type="text" name="title" required>
+</div>
+
+<!-- 2. Category & Subcategory Section -->
+<div class="form-group">
+<label>Category:</label>
+<!-- The placeholder for Category is managed by Choices.js based on the first option -->
+<select name="category" id="category" class="custom-select" required>
+<option value="" disabled selected>Category</option> <!-- Placeholder -->
+<option value="mobile">Mobile & Accessories</option>
+<option value="jobs">Jobs</option>
+<option value="real_estate">Real Estate</option>
+<option value="vehicle">Vehicles</option>
+<option value="electronics">Electronics & Appliances</option>
+<option value="education">Education & Training</option>
+<option value="personal">Personal & Dating</option>
+<option value="home">Home & Furniture</option>
+<option value="fashion">Fashion & Beauty</option>
+<option value="services">Services</option>
+<option value="pets">Pets & Animals</option>
+<option value="sports">Sports, Hobbies & Books</option>
+<option value="kids">Kids & Babies</option>
+<option value="agriculture">Agriculture & Farming</option>
+<option value="business">Business & Industrial</option>
+</select>
+</div>
+
+<!-- Subcategory Field (Initially disabled) -->
+<div class="form-group">
+<label>Subcategory:</label>
+<!-- Placeholder text updated by JavaScript -->
+<select name="subcategory" id="subcategory" class="custom-select" disabled>
+<option value="" selected>Select Category First</option> <!-- Initial placeholder -->
+</select>
+</div>
+
+<!-- 3. Description Field -->
+<div class="form-group">
+<label>Description:</label>
+<textarea name="description" required></textarea>
+</div>
+
+<!-- 4. Price Field -->
+<div class="form-group">
+<label>Price:</label>
+<input type="number" step="0.01" name="price" required>
+</div>
+
+<!-- 5. Location Fields and Get Location Button -->
+<div class="form-group">
+<label>Location:
+<!-- Button to trigger location fetch -->
+<button type="button" id="getLocation">
+<img src="/static/locationicon.png" alt="Get Location" class="location-icon">
+</button>
+</label>
+<!-- Container for City, State, and Pincode fields -->
+<div class="location-fields">
+<input type="text" name="city" placeholder="City" required>
+<input type="text" name="state" placeholder="State" required>
+<input type="text" name="pincode" placeholder="Pincode" required>
+</div>
+<!-- Hidden fields for storing coordinates and edit status -->
+<input type="hidden" name="lat" id="hiddenLat">
+<input type="hidden" name="lng" id="hiddenLng">
+<input type="hidden" name="isEdited" id="isEdited" value="false">
+</div>
+
+<!-- 6. Image Upload Section (Maximum 5 images) -->
+<div class="form-group">
+<label>Images (Max 5):</label>
+<input type="file" name="images" multiple accept="image/*" id="imageInput">
+<div class="image-preview" id="imagePreview"></div>
+</div>
+
+<!-- Submit Button -->
+<button type="submit">Post Ad</button>
+</form>
+</div>
+{{end}}
+
+{{define "scripts_extra"}}
+<!-- Include Choices.js script and additional JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<script>
+// Ensure the global 'subcategories' object is defined
+if (typeof subcategories === 'undefined') {
+console.error("FATAL: Global 'subcategories' object not found. Subcategory dropdown will not work.");
+const subcategories = {};
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+console.log("Post Ad DOM Ready. Initializing...");
+
+// ================================================================
+// 1. ELEMENT REFERENCES
+// ================================================================
+const postForm = document.getElementById('postForm');
+const categorySelectElem = document.getElementById('category');
+const subcategorySelectElem = document.getElementById('subcategory');
+const hiddenLatInput = document.getElementById('hiddenLat');
+const hiddenLngInput = document.getElementById('hiddenLng');
+const cityInput = document.querySelector('input[name="city"]');
+const stateInput = document.querySelector('input[name="state"]');
+const pincodeInput = document.querySelector('input[name="pincode"]');
+const getLocationButton = document.getElementById('getLocation');
+const imageInput = document.getElementById('imageInput');
+const imagePreview = document.getElementById('imagePreview');
+const isEditedInput = document.getElementById('isEdited');
+
+// ================================================================
+// 2. STATE VARIABLES
+// ================================================================
+let isLocationEditedByUser = false;
+let uploadedImages = [];
+let categorySelectInstance = null;
+let subcategorySelectInstance = null; // Will be managed dynamically
+
+// ================================================================
+// 3. HELPER FUNCTION: Validate Choices.js Instance
+// ================================================================
+function isValidChoicesInstance(instance) {
+// Check if instance is an object and has a destroy method
+return typeof instance === 'object' && instance !== null && typeof instance.destroy === 'function';
+}
+
+// ================================================================
+// 4. FUNCTION: Setup/Recreate Subcategory Choices
+// ================================================================
+function setupSubcategoryChoices(enable = false, placeholderText = 'Select Category First', choices = []) {
+console.log(`Setup Subcategory: Enable=${enable}, Placeholder='${placeholderText}', Choices=`, choices);
+
+// Step 1: Destroy existing instance if valid
+if (isValidChoicesInstance(subcategorySelectInstance)) {
+try {
+console.log("Destroying existing subcategory Choices instance.");
+subcategorySelectInstance.destroy();
+subcategorySelectInstance = null; // Clear reference
+} catch (e) {
+console.error("Error destroying previous subcategory instance:", e);
+// Attempt to continue; state might be inconsistent
+}
+} else {
+console.log("No valid existing subcategory instance to destroy.");
+}
+
+// Step 2: Reset underlying HTML select content and state
+subcategorySelectElem.innerHTML = ''; // Clear all options
+// Add placeholder option back to the HTML select for Choices.js
+const placeholderOption = document.createElement('option');
+placeholderOption.value = "";
+placeholderOption.textContent = placeholderText;
+placeholderOption.selected = true;
+placeholderOption.disabled = !enable; // Disable placeholder if list should be active
+subcategorySelectElem.appendChild(placeholderOption);
+subcategorySelectElem.disabled = !enable; // Set disabled state
+
+// If enabling and choices exist, add them to the select element
+if (enable && choices.length > 0) {
+choices.forEach(choice => {
+const option = document.createElement('option');
+option.value = choice.value;
+option.textContent = choice.label;
+subcategorySelectElem.appendChild(option);
+});
+// Ensure placeholder remains selected initially
+subcategorySelectElem.value = "";
+}
+
+// Step 3: Initialize a new Choices.js instance on the select element
+try {
+console.log("Initializing NEW subcategory Choices instance.");
+subcategorySelectInstance = new Choices(subcategorySelectElem, {
+placeholder: true, // Use built-in placeholder handling
+removeItemButton: false,
+});
+
+// Set enabled/disabled state after initialization
+if (enable) {
+subcategorySelectInstance.enable();
+console.log("NEW Subcategory instance ENABLED.");
+} else {
+subcategorySelectInstance.disable();
+console.log("NEW Subcategory instance DISABLED.");
+}
+
+} catch (initError) {
+console.error("FATAL: Error initializing new subcategory Choices instance:", initError);
+subcategorySelectInstance = null; // Ensure it's null on failure
+alert("Error updating subcategories. Please refresh.");
+}
+}
+
+// ================================================================
+// 5. INITIAL CHOICES.JS SETUP FOR CATEGORY AND SUBCATEGORY
+// ================================================================
+if (categorySelectElem && subcategorySelectElem) {
+try {
+// Initialize Category Choices instance
+console.log("Attempting to initialize Category Choices...");
+categorySelectInstance = new Choices(categorySelectElem, {
+shouldSort: false,
+placeholderValue: categorySelectElem.querySelector('option[disabled][selected]')?.textContent || 'Select Category',
+removeItemButton: false
+});
+console.log("Choices.js: Category instance CREATED.");
+
+// Initial setup for Subcategory (disabled by default)
+setupSubcategoryChoices(false, 'Select Category First', []);
+
+// ================================================================
+// 6. EVENT LISTENER: Handle Category Change
+// ================================================================
+console.log("Attaching category change listener...");
+categorySelectElem.addEventListener('change', function() {
+console.log("--- Category Change Event Fired ---");
+
+if (!isValidChoicesInstance(categorySelectInstance)) {
+console.error("Listener aborted: Category instance invalid.");
+return;
+}
+
+const selectedCategory = categorySelectInstance.getValue(true);
+console.log("Listener: Category value:", selectedCategory);
+let subcatChoices = []; // Array for subcategory choices
+let enableSubcat = false;
+let subcatPlaceholder = 'Select Category First'; // Default placeholder
+
+// Retrieve subcategories for the selected category
+const currentSubcategories = subcategories[selectedCategory] || [];
+
+if (selectedCategory && currentSubcategories.length > 0) {
+console.log("Listener: Valid category with subs found.");
+enableSubcat = true; // Enable the subcategory dropdown
+subcatPlaceholder = 'Select Subcategory'; // Update placeholder
+
+// Map each subcategory into an object with value and label
+subcatChoices = currentSubcategories.map(sub => ({
+value: sub.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, ''),
+label: sub
+}));
+console.log("Listener: Prepared choices:", subcatChoices);
+
+} else {
+// If no valid subcategory, disable subcategory dropdown
+console.log("Listener: No valid category/subs. Will disable subcategory.");
+enableSubcat = false;
+subcatPlaceholder = 'Select Category First';
+subcatChoices = [];
+}
+
+// Call the function to update the subcategory dropdown
+setupSubcategoryChoices(enableSubcat, subcatPlaceholder, subcatChoices);
+
+console.log("--- Category Change Event End ---");
+});
+
+console.log("Choices initialization calls complete. Listener attached.");
+
+} catch (error) {
+console.error("FATAL: Error during INITIAL Choices.js setup:", error);
+alert("Critical error setting up dropdowns. Please refresh.");
+if(postForm) {
+postForm.style.opacity = '0.5';
+postForm.style.pointerEvents = 'none';
+}
+}
+} else {
+console.error("FATAL: Category/Subcategory select elements not found.");
+alert("Page error: Dropdown fields could not be loaded.");
+if(postForm) {
+postForm.style.opacity = '0.5';
+postForm.style.pointerEvents = 'none';
+}
+}
+
+// ================================================================
+// 7. LOCATION LOGIC: Handle Auto-Fetch of Location Data
+// ================================================================
+document.querySelectorAll('input[name="city"], input[name="state"], input[name="pincode"]').forEach(input => {
+input.addEventListener('input', function() {
+if (hiddenLatInput?.value || hiddenLngInput?.value) {
+isLocationEditedByUser = true;
+if (isEditedInput) isEditedInput.value = "true";
+console.log("Location edited by user after auto-fetch.");
+}
+});
+});
+
+// Function to fetch location via geolocation API and update fields
+function fetchPostAdLocation() {
+if (!navigator.geolocation) {
+alert('Geolocation is not supported by your browser.');
+return;
+}
+if (!hiddenLatInput || !hiddenLngInput || !cityInput || !stateInput || !pincodeInput) {
+console.error("Location input elements missing.");
+alert("Internal page error (location fields).");
+return;
+}
+getLocationButton.disabled = true;
+getLocationButton.querySelector('img').style.opacity = '0.5';
+
+navigator.geolocation.getCurrentPosition(
+(position) => {
+const lat = position.coords.latitude;
+const lng = position.coords.longitude;
+console.log(`Geolocation success: Lat: ${lat}, Lng: ${lng}`);
+hiddenLatInput.value = lat;
+hiddenLngInput.value = lng;
+isLocationEditedByUser = false;
+if (isEditedInput) isEditedInput.value = "false";
+fetch(`/geocode?lat=${lat}&lng=${lng}`)
+.then(response => {
+if (!response.ok) {
+throw new Error(`Geocoding request failed: HTTP ${response.status}`);
+}
+return response.json();
+})
+.then(data => {
+console.log("Geocode response:", data);
+if (data.status === "OK" && data.city) {
+cityInput.value = data.city || '';
+stateInput.value = data.state || '';
+pincodeInput.value = data.pincode || '';
+console.log("Location fields populated.");
+} else {
+throw new Error(data.error_message || 'Geocoding successful, but address details incomplete.');
+}
+})
+.catch(error => {
+console.error("Geocode processing error:", error);
+alert(`Could not get location details: ${error.message}. Please enter manually.`);
+cityInput.value = '';
+stateInput.value = '';
+pincodeInput.value = '';
+hiddenLatInput.value = '';
+hiddenLngInput.value = '';
+})
+.finally(() => {
+getLocationButton.disabled = false;
+getLocationButton.querySelector('img').style.opacity = '1';
+});
+},
+(error) => {
+console.error("Geolocation error:", error);
+let msg = 'Could not get location. ';
+switch (error.code) {
+case error.PERMISSION_DENIED:
+msg += "Permission denied.";
+break;
+case error.POSITION_UNAVAILABLE:
+msg += "Location information unavailable.";
+break;
+case error.TIMEOUT:
+msg += "Request timed out.";
+break;
+default:
+msg += "An unknown error occurred.";
+break;
+}
+alert(msg + " Please enter manually.");
+hiddenLatInput.value = '';
+hiddenLngInput.value = '';
+isLocationEditedByUser = false;
+if (isEditedInput) isEditedInput.value = "false";
+getLocationButton.disabled = false;
+getLocationButton.querySelector('img').style.opacity = '1';
+},
+{ timeout: 10000, enableHighAccuracy: true }
+);
+}
+if (getLocationButton) {
+getLocationButton.addEventListener('click', fetchPostAdLocation);
+} else {
+console.warn("Get Location button not found.");
+}
+
+// ================================================================
+// 8. IMAGE PREVIEW AND MANAGEMENT LOGIC
+// ================================================================
+if (imageInput && imagePreview) {
+imageInput.addEventListener('change', function(event) {
+const files = Array.from(event.target.files);
+const totalImages = uploadedImages.length + files.length;
+if (totalImages > 5) {
+alert(`You can upload a maximum of 5 images. You already have ${uploadedImages.length} and tried to add ${files.length}.`);
+updateImageInput();
+return;
+}
+let processedCount = 0;
+files.forEach(file => {
+if (!file.type.startsWith('image/')) {
+console.warn(`Skipping non-image file: ${file.name}`);
+processedCount++;
+if (processedCount === files.length) updateImageInput();
+return;
+}
+if (uploadedImages.some(existingFile => existingFile.name === file.name && existingFile.size === file.size)) {
+console.warn(`Skipping duplicate image: ${file.name}`);
+processedCount++;
+if (processedCount === files.length) updateImageInput();
+return;
+}
+const reader = new FileReader();
+reader.onload = e => {
+const container = document.createElement('div');
+container.className = 'image-container';
+const img = document.createElement('img');
+img.src = e.target.result;
+img.alt = file.name;
+const removeBtn = document.createElement('div');
+removeBtn.className = 'remove-image';
+removeBtn.innerHTML = '×';
+removeBtn.title = 'Remove image';
+container.appendChild(img);
+container.appendChild(removeBtn);
+imagePreview.appendChild(container);
+removeBtn._associatedFile = file;
+removeBtn._associatedContainer = container;
+removeBtn.addEventListener('click', () => {
+imagePreview.removeChild(removeBtn._associatedContainer);
+uploadedImages = uploadedImages.filter(f => f !== removeBtn._associatedFile);
+updateImageInput();
+console.log(`Removed image: ${removeBtn._associatedFile.name}. Remaining: ${uploadedImages.length}`);
+});
+uploadedImages.push(file);
+processedCount++;
+if (processedCount === files.length) updateImageInput();
+};
+reader.onerror = (err) => {
+console.error(`Error reading file ${file.name}:`, err);
+alert(`Could not read file: ${file.name}`);
+processedCount++;
+if (processedCount === files.length) updateImageInput();
+};
+reader.readAsDataURL(file);
+});
+});
+} else {
+console.warn("Image input or preview element not found.");
+}
+
+// Function to update the image input field with the current list of uploaded images
+function updateImageInput() {
+if (!imageInput) return;
+const dataTransfer = new DataTransfer();
+uploadedImages.forEach(file => dataTransfer.items.add(file));
+imageInput.files = dataTransfer.files;
+console.log(`Image input updated. File count: ${imageInput.files.length}`);
+}
+
+// ================================================================
+// 9. FORM SUBMISSION HANDLER WITH VALIDATIONS
+// ================================================================
+if (postForm) {
+postForm.addEventListener('submit', function(e) {
+console.log("Form submission attempt...");
+
+// Validate Category Choices instance
+if (!isValidChoicesInstance(categorySelectInstance)) {
+alert('Error: Category dropdown is not initialized correctly. Please refresh the page.');
+e.preventDefault();
+console.log("Submit blocked: categorySelectInstance invalid.");
+return;
+}
+// Validate Subcategory instance if not disabled
+if (!subcategorySelectElem.disabled && !isValidChoicesInstance(subcategorySelectInstance)) {
+alert('Error: Subcategory dropdown is not initialized correctly. Please refresh the page.');
+e.preventDefault();
+console.log("Submit blocked: subcategorySelectInstance invalid or not ready.");
+return;
+}
+
+// Field value validations
+if (!categorySelectInstance.getValue(true)) {
+alert('Please select a Category.');
+categorySelectInstance.showDropdown();
+e.preventDefault();
+return;
+}
+if (!subcategorySelectElem.disabled && !subcategorySelectInstance.getValue(true)) {
+alert('Please select a Subcategory.');
+if (isValidChoicesInstance(subcategorySelectInstance)) subcategorySelectInstance.showDropdown();
+e.preventDefault();
+return;
+}
+const titleInput = document.querySelector('input[name="title"]');
+const descriptionInput = document.querySelector('textarea[name="description"]');
+const priceInput = document.querySelector('input[name="price"]');
+if (!titleInput?.value.trim()) {
+alert('Please enter a Title.');
+titleInput.focus();
+e.preventDefault();
+return;
+}
+if (!descriptionInput?.value.trim()) {
+alert('Please enter a Description.');
+descriptionInput.focus();
+e.preventDefault();
+return;
+}
+if (!priceInput || priceInput.value === '' || isNaN(parseFloat(priceInput.value)) || parseFloat(priceInput.value) < 0) {
+alert('Please enter a valid, non-negative Price.');
+priceInput.focus();
+e.preventDefault();
+return;
+}
+if (!cityInput?.value.trim() || !stateInput?.value.trim() || !pincodeInput?.value.trim()) {
+alert('Please provide City, State, and Pincode for the location.');
+if (!cityInput?.value.trim()) cityInput.focus();
+else if (!stateInput?.value.trim()) stateInput.focus();
+else pincodeInput.focus();
+e.preventDefault();
+return;
+}
+
+// Handle location coordinates based on whether the location was edited manually
+if (isLocationEditedByUser && hiddenLatInput && hiddenLngInput) {
+console.log("Clearing coordinates because location was manually edited.");
+hiddenLatInput.value = '';
+hiddenLngInput.value = '';
+} else if (!hiddenLatInput?.value || !hiddenLngInput?.value) {
+console.warn("Submitting without latitude/longitude coordinates.");
+}
+
+// Warn if no images were uploaded (optional)
+if (uploadedImages.length === 0) {
+console.warn("Submitting ad without any images.");
+}
+
+console.log("Form validation passed. Proceeding with submission...");
+const submitButton = postForm.querySelector('button[type="submit"]');
+if(submitButton) {
+submitButton.disabled = true;
+submitButton.textContent = 'Posting...';
+}
+// Form submits
+});
+} else {
+console.error("CRITICAL: Post Ad Form element (#postForm) not found.");
+alert("Page error: Could not find the main form.");
+}
+
+}); // End of DOMContentLoaded event listener
+</script>
+{{end}}

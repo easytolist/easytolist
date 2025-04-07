@@ -1,0 +1,961 @@
+/* ===========================
+   General Styles
+=========================== */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background-color: #e2f1ff; /* Light blue background */
+}
+
+/* ===========================
+   Header Styles
+=========================== */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: white;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  position: relative;
+  border-bottom: 1px solid #0000002b;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: 1rem;
+}
+.logo-container a {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+.company-name {
+  color: #1DBFC1;
+  font-weight: bold;
+  font-size: 1.5rem;
+  transition: transform 0.3s ease;
+}
+.company-name:hover {
+  transform: scale(1.05);
+}
+.logo {
+  max-width: 50px;
+  height: auto;
+  transition: transform 0.3s ease;
+}
+.logo:hover {
+  transform: scale(1.05);
+}
+
+/* Navigation Links */
+.home-links {
+  display: flex;
+  gap: 2rem;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.home-links a {
+  color: #333;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+.home-links a:hover {
+  color: #1DBFC1;
+}
+
+/* Right Side Links */
+.main-links {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-right: 1rem;
+}
+.post-ad-btn {
+  background: #1DBFC1;
+  color: white !important;
+  padding: 0.5rem 1.5rem;
+  border-radius: 20px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+.post-ad-btn:hover {
+  background: white;
+  color: #1DBFC1 !important;
+  border-color: #1DBFC1;
+}
+.main-links a:not(.post-ad-btn) {
+  color: #333;
+  text-decoration: none;
+  transition: color 0.3s ease;
+  font-weight: bold;
+}
+.main-links a:not(.post-ad-btn):hover {
+  color: #1DBFC1;
+}
+
+/* ===========================
+   Account Dropdown
+=========================== */
+.account-dropdown {
+  position: relative;
+  display: inline-block;
+}
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: white;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  min-width: 150px;
+  z-index: 1000;
+  border-radius: 5px;
+  padding: 0.5rem 0;
+  flex-direction: column;
+  gap: 8px;
+}
+.dropdown-menu.show {
+  display: flex;
+  animation: slideDown 0.3s ease;
+}
+.dropdown-menu a {
+  padding: 0.5rem 1rem;
+  color: #333;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  width: 80%;
+  text-align: left;
+  transition: all 0.3s ease;
+}
+.dropdown-menu a:last-child {
+  border-bottom: none;
+}
+.dropdown-menu a:hover {
+  background: rgba(29, 191, 193, 0.1);
+  color: #1DBFC1;
+}
+.user-icon {
+  width: 32px;
+  height: 32px;
+  transition: transform 0.3s ease;
+  display: block;
+}
+.user-icon:hover {
+  transform: scale(1.1);
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===========================
+   Responsive (Mobile & Desktop)
+=========================== */
+@media (max-width: 768px) {
+  header { padding: 1rem; }
+  .logo-container { margin-left: 0; flex: 1; }
+  .home-links { display: none; }
+  .main-links {
+    margin-right: 0;
+    gap: 0.8rem;
+    justify-content: flex-end;
+    flex: 1;
+  }
+  .post-ad-btn {
+    order: 1;
+    padding: 0.4rem 1rem;
+    font-size: 0.9rem;
+  }
+  .account-dropdown { order: 2; }
+  .user-icon { width: 28px; height: 28px; }
+  .dropdown-menu { right: 0; min-width: 160px; }
+  .dropdown-menu.mobile-dropdown {
+    display: none;
+    position: fixed;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-5%);
+    width: 50%;
+    max-width: 300px;
+  }
+  .dropdown-menu.mobile-dropdown.show { display: flex; }
+  .dropdown-menu.mobile-dropdown a { width: 100%; }
+}
+@media (min-width: 769px) {
+  .dropdown-menu.mobile-dropdown { display: none !important; }
+}
+@media (max-width: 768px) {
+  .dropdown-menu.desktop-dropdown { display: none !important; }
+}
+
+/* ===========================
+   Search Section & Form
+=========================== */
+.search-section {
+  background-color: white;
+  margin: 30px 10px;
+  padding: 25px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  max-width: 1350px;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+.search-form {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.search-form > *:not(script) {
+  flex: 1 1 180px;
+  min-width: 0;
+  position: relative;
+}
+.search-form input,
+.search-form select,
+.search-btn,
+.custom-select {
+  width: 100%;
+  box-sizing: border-box;
+  height: 45px;
+  border: 1px solid #ddd;
+  border-radius: 25px;
+  font-size: 16px;
+  margin: 0;
+  text-align: center !important;
+}
+
+/* ===========================
+   Choices.js Customization
+=========================== */
+.custom-select .choices__inner {
+  height: 45px !important;
+  line-height: 45px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  text-align: center;
+}
+.custom-select .choices__item--selectable,
+.custom-select .choices__placeholder {
+  line-height: 45px !important;
+  padding: 0 10px;
+}
+
+/* Reduce gap between dropdown options & allow full text */
+.custom-select .choices__list--dropdown {
+  padding: 0 !important;
+}
+.custom-select .choices__list--dropdown .choices__item--choice {
+  padding: 5px 10px !important;
+  white-space: normal;  /* allow wrapping if text is long */
+  text-align: center;
+}
+
+/* ===========================
+   State Input with Icon
+=========================== */
+.custom-select.state-input {
+  position: relative;
+  border: none !important;
+}
+.custom-select.state-input input {
+  padding-left: 45px; /* space for icon */
+  padding-right: 45px; /* to center placeholder text */
+  text-align: center;
+  box-sizing: border-box;
+}
+.custom-select.state-input .location-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+/* ===========================
+   Search Button
+=========================== */
+.search-btn {
+  background-color: #1DBFC1;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 25px;
+  background-image: url('/static/searchicon.png');
+  background-repeat: no-repeat;
+  background-position: calc(100% - 35px) center;
+  background-size: 20px;
+}
+.search-btn:hover {
+  background-color: #1aa8a8;
+  transform: translateY(-2px);
+}
+
+/* Mobile adjustments for search section */
+@media (max-width: 768px) {
+  .search-section { margin: 15px 10px 0; padding: 15px; }
+  .search-form { flex-direction: column; gap: 10px; }
+  .search-btn { background-position: calc(100% - 90px) center; }
+  .search-form > * { flex: 1 1 auto; width: 100%; max-height: 50px; }
+  .custom-select.state-input input { padding-left: 40px; }
+  .custom-select.state-input .location-icon { width: 18px; height: 18px; left: 10px; }
+
+  /* Adjust dropdown options on mobile */
+  .custom-select .choices__list--dropdown {
+    top: 100% !important;
+    margin-top: 5px !important;
+    max-height: 200px !important;
+    overflow-y: auto !important;
+    width: 100% !important;
+    left: 0 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+  }
+  .custom-select .choices__list--dropdown .choices__item--choice {
+    padding: 5px 10px !important;
+  }
+}
+
+/* ===========================
+   Ads Grid & Ad Card
+=========================== */
+.ads-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  padding: 1rem;
+}
+@media (max-width: 768px) {
+  .ads-grid { grid-template-columns: 1fr; }
+}
+.ad-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  overflow: hidden;
+  transition: transform 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.ad-card:hover { transform: translateY(-5px); }
+
+/* ===========================
+   Carousel Styles
+=========================== */
+.carousel {
+  position: relative;
+  height: 250px;
+  overflow: hidden;
+}
+.carousel-inner {
+  display: flex;
+  transition: transform 0.5s ease;
+}
+.carousel-item {
+  min-width: 100%;
+  height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.carousel-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 8px;
+}
+.carousel-dots {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 5px;
+  pointer-events: auto;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.5);
+  cursor: pointer;
+}
+.dot.active { background: #ffffff; }
+
+/* ===========================
+   Ad Content
+=========================== */
+.ad-content {
+  padding: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.ad-title { font-size: 1.2rem; margin-bottom: 0.5rem; color: #333; }
+.location { font-size: 0.9rem; color: #666; margin-bottom: 0.3rem; }
+.category { font-size: 0.8rem; color: #999; margin-bottom: 0.5rem; }
+.divider { height: 1px; background: #eee; margin: 0.5rem 0; }
+.price-section { display: flex; justify-content: space-between; align-items: center; }
+.price { font-weight: bold; color: #2ecc71; }
+.view-icon { width: 24px; height: 24px; opacity: 0.7; }
+
+/* ===========================
+   Additional Fixes
+=========================== */
+/* Account Dropdown Fix */
+.account-dropdown[data-loggedin="true"] .dropdown-toggle {
+  cursor: pointer;
+  pointer-events: auto !important;
+}
+/* Mobile Dropdown Fix */
+@media (max-width: 768px) {
+  .dropdown-menu.mobile-dropdown {
+    left: 0;
+    transform: none;
+    width: 100%;
+    max-width: none;
+  }
+}
+/* Clickable area overlay */
+.clickable-area {
+  cursor: pointer;
+  position: relative;
+}
+.clickable-area::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+}
+.clickable-icon {
+  cursor: pointer;
+  z-index: 2;
+  position: relative;
+}
+/* Prevent carousel clicks */
+.carousel, .carousel * {
+  pointer-events: auto;
+}
+.ad-card:hover .clickable-area {
+  background-color: #f8f9fa;
+}
+.ad-card-wrapper {
+  text-decoration: none;
+}
+
+/* ===========================
+   filter spinner loading
+=========================== */
+/* Loading Overlay Styles */
+#loadingOverlay {
+display: none; /* Initially hidden */
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background: rgba(255, 255, 255, 0.8);
+backdrop-filter: blur(5px); /* Apply a blur effect */
+z-index: 1000;
+text-align: center;
+}
+
+/* Spinner Container */
+#loadingOverlay .spinner {
+position: absolute;
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
+}
+
+/* Optional: Create a simple spinner animation */
+@keyframes spin {
+0% { transform: rotate(0deg); }
+100% { transform: rotate(360deg); }
+}
+
+#loadingOverlay .spinner img {
+width: 50px;
+height: 50px;
+animation: spin 1s linear infinite;
+}
+
+#loadingOverlay .spinner p {
+font-size: 16px;
+color: #333;
+margin-top: 10px;
+}
+
+/* ==============================================================
+ CSS for: Browse by Category & Category Results Sections
+ Includes CSS-Only Fix for Subcategory Positioning
+============================================================== */
+
+/* --- Main Browse Section Container --- */
+.category-browse-section {
+background-color: white;
+margin: 25px auto;
+padding: 25px;
+box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+max-width: 1350px;
+border-radius: 8px;
+box-sizing: border-box;
+}
+
+/* --- Browse Section Heading --- */
+.category-browse-section h2 {
+text-align: center;
+margin-top: 0;
+margin-bottom: 30px;
+color: #333;
+font-size: 1.6rem;
+font-weight: 600;
+}
+
+/* --- Grid for Main Categories --- */
+.category-grid {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+gap: 10px 20px;
+margin-bottom: 25px;
+padding-bottom: 15px;
+}
+
+/* --- Individual Category Item --- */
+.category-item {
+background-color: transparent;
+border: none;
+border-bottom: 1px solid #eee;
+color: #333;
+padding: 10px 5px 12px 5px;
+text-align: left;
+font-size: 1rem;
+font-weight: 500;
+cursor: pointer;
+transition: color 0.2s ease, border-color 0.2s ease;
+width: 100%;
+box-sizing: border-box;
+}
+
+.category-item:hover,
+.category-item.active {
+color: #1DBFC1;
+border-bottom-color: #1DBFC1;
+}
+
+/* --- Container for Subcategory Lists (Positioning Context) --- */
+.subcategory-container {
+margin-top: 20px;
+padding-top: 20px;
+border-top: 1px solid #f0f0f0;
+min-height: 40px; /* Ensure space */
+position: relative; /* *** CRITICAL: Positioning context for absolute children *** */
+}
+
+/* --- Individual Subcategory List (Absolutely Positioned) --- */
+.subcategory-list {
+ display: none;          /* Hide by default */
+ /* *** CRITICAL: Position Absolutely *** */
+ position: absolute;
+ top: 0;                 /* Align to the top of the container */
+ left: 0;                /* Align to the left of the container */
+ width: 100%;            /* Take full width of the container */
+ /* *** *** *** *** *** *** *** *** */
+
+ /* Flexbox layout *within* the list */
+ display: flex;          /* Use flex (will be overridden by .show rule anyway) */
+ flex-wrap: wrap;
+ gap: 15px;
+ justify-content: flex-start;
+ padding: 10px 0;        /* Padding inside the list */
+ box-sizing: border-box;
+}
+
+/* --- Show the Active Subcategory List --- */
+.subcategory-list.show {
+  display: flex;          /* Make it visible using flex */
+  position: absolute;     /* Re-affirm absolute positioning */
+  /* z-index: 1; */      /* Optional: ensure it's above others if needed */
+  animation: fadeIn 0.4s ease; /* Apply fade-in */
+}
+
+/* --- Individual Subcategory Item --- */
+.subcategory-item {
+background-color: transparent;
+border: none;
+border-bottom: 1px solid #f0f0f0;
+color: #555;
+padding: 6px 0px 8px 0px;
+text-align: left;
+font-size: 0.9rem;
+cursor: pointer;
+transition: color 0.2s ease, border-color 0.2s ease;
+flex-grow: 0;
+}
+
+.subcategory-item:hover {
+color: #1DBFC1;
+border-bottom-color: #1DBFC1;
+}
+
+
+/* --- Container for Category Results --- */
+.category-results-container {
+max-width: 1350px;
+margin: 30px auto;
+padding: 0 10px;
+box-sizing: border-box;
+/* Add background/shadow matching .category-browse-section if desired */
+/* background-color: white; */
+/* border-radius: 8px; */
+/* box-shadow: 0 2px 5px rgba(0,0,0,0.1); */
+}
+
+/* --- Heading for Category Results --- */
+#categoryResultsHeading {
+text-align: center;
+margin-bottom: 25px;
+color: #333;
+font-size: 1.6rem;
+font-weight: 600;
+}
+
+/* --- Grid for Category Results Ads --- */
+.category-ads-grid {
+ /* Assumes styles are inherited from a global .ads-grid rule */
+ /* If not, copy required grid styles here */
+ display: grid; /* Example */
+ grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Example */
+ gap: 1.5rem; /* Example */
+}
+
+/* --- Show More Button for Category Results --- */
+#categoryShowMoreBtn {
+  /* Base styles are inline in HTML, add hover/disabled */
+  margin-top: 15px;
+}
+#categoryShowMoreBtn:hover {
+  background-color: #1aa8a8 !important;
+}
+#categoryShowMoreBtn:disabled {
+ background-color: #ccc !important;
+ cursor: not-allowed !important;
+}
+
+
+/* --- Keyframe Animation --- */
+@keyframes fadeIn {
+from { opacity: 0; transform: translateY(5px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Mobile Adjustments for these sections --- */
+@media (max-width: 768px) {
+  .category-browse-section { margin: 15px 10px; padding: 15px; }
+  .category-browse-section h2,
+  #categoryResultsHeading { font-size: 1.3rem; margin-bottom: 20px; }
+  .category-grid { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px 15px; margin-bottom: 20px;}
+  .category-item { font-size: 0.9rem; padding: 8px 5px 10px 5px; }
+  .subcategory-container { margin-top: 15px; padding-top: 15px; min-height: 80px; }
+  .subcategory-list { gap: 10px; } /* Still needed for spacing *inside* the list */
+  .subcategory-item { font-size: 0.85rem; padding: 5px 0px 7px 0px; }
+  .category-results-container { margin: 20px auto; }
+  .category-ads-grid { grid-template-columns: 1fr; /* Example mobile grid */ }
+  .subcategory-list {
+    gap: 8px; /* Reduce gap slightly on mobile */
+    padding: 8px 5px; /* Adjust padding inside the list slightly */
+     /* Ensure it recalculates height based on wrapped content */
+    height: auto;
+    /* Make sure items can wrap freely within the 100% width */
+    align-content: flex-start; /* Align wrapped lines to the start */
+
+     /* --- Add Scrollbars ONLY if overflowing --- */
+     /* This is often better than overflow: hidden */
+     max-height: 150px; /* Set a max-height before scrolling starts */
+     overflow-y: auto;  /* Add vertical scrollbar if content exceeds max-height */
+     /* --- End Scrollbar Addition --- */
+}
+
+ .subcategory-item {
+    font-size: 0.8rem; /* Slightly smaller font */
+    padding: 5px 10px; /* Adjust padding */
+    /* Ensure items don't grow excessively */
+    flex-grow: 0;
+    flex-shrink: 0; /* Prevent shrinking too much maybe? Test */
+}
+}
+/* show more button center */
+.pagination-container button {
+display: block;
+margin: 0 auto;
+width: 150px; /* Adjust the width as needed */
+}
+
+/* FOTTER SECTION */
+footer {
+font-family: Arial, sans-serif;
+overflow-x: hidden; /* Prevent horizontal scrolling */
+animation: fadeIn 1s ease-in-out;
+}
+
+/* Main Footer Section */
+.footer-main {
+background-color: #fff;
+padding: 40px 20px;
+display: flex;
+justify-content: space-between;
+align-items: flex-start;
+flex-wrap: wrap;
+}
+
+/* Each Column */
+.footer-column {
+flex: 1;
+margin: 10px;
+min-width: 250px;
+}
+
+/* Left Column - Company Logo & Info */
+.footer-left .footer-logo {
+display: flex;
+align-items: center;
+margin-bottom: 15px;
+}
+
+.footer-left .footer-logo img {
+width: 40px; /* Adjust size as needed */
+margin-right: 0px;
+}
+
+.footer-left h2 {
+margin: 0;
+font-size: 24px;
+color: #1DBFC1; /* Updated to desired color */
+}
+
+/* Left Column Paragraph (set all text to lowercase) */
+.footer-left p {
+text-transform: lowercase;
+line-height: 1.6;
+}
+
+/* Center Column - Quick Links */
+.footer-center h2,
+.footer-right h2 {
+font-size: 24px;
+color: #000;
+margin-bottom: 20px;
+/* Remove extra left margin in desktop view */
+margin-left: 100px;
+}
+
+.footer-links {
+list-style: none;
+padding: 0;
+margin: 0;
+margin-left: 102px;
+
+}
+
+.footer-links li {
+margin-bottom: 15px;
+}
+
+.footer-links a {
+text-decoration: none;
+color: #000;
+transition: color 0.3s ease;
+}
+
+.footer-links a:hover {
+color: #1DBFC1;
+}
+
+/* Right Column - Contact Form */
+.footer-contact-form input,
+.footer-contact-form textarea {
+width: 100%;
+padding: 10px;
+margin-bottom: 15px;
+border: 1px solid #ccc;
+border-radius: 4px;
+box-sizing: border-box; /* Ensures padding does not exceed container width */
+}
+
+.footer-contact-form button {
+padding: 10px 20px;
+background-color: #000;
+color: #fff;
+border: none;
+border-radius: 4px;
+cursor: pointer;
+transition: background-color 0.3s ease;
+}
+
+.footer-contact-form button:hover {
+background-color: #1DBFC1;
+}
+
+/* Footer Bottom Section */
+.footer-bottom {
+background-color: #1DBFC1;
+text-align: center;
+padding: 15px 0;
+}
+
+.footer-bottom p {
+margin: 0;
+color: #000;
+font-size: 14px;
+}
+
+/* Responsive Styling for Mobile View */
+@media (max-width: 768px) {
+.footer-main {
+  flex-direction: column;
+  text-align: center;
+}
+
+.footer-column {
+  margin: 20px 0;
+  /* Add horizontal line separator between columns */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+  padding-bottom: 20px;
+}
+
+/* Remove border from the last column */
+.footer-column:last-child {
+  border-bottom: none;
+}
+
+/* Center the logo and headings in mobile view */
+.footer-left .footer-logo,
+.footer-right h3 {
+  justify-content: center;
+  text-align: center;
+}
+
+/* Left column paragraph text aligned to left */
+.footer-left p {
+  text-align: left;
+  padding: 0 10px;
+}
+
+/* Ensure the contact form elements don't overflow */
+.footer-contact-form input,
+.footer-contact-form textarea {
+  max-width: 100%;
+}
+
+/* Center the submit button */
+.footer-contact-form button {
+  display: block;
+  margin: 0 auto;
+}
+
+/* Set Contact Us heading to 24px */
+.footer-right h3 {
+  font-size: 24px;
+}
+}
+
+/* Simple Fade-In Animation */
+@keyframes fadeIn {
+from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+to {
+  opacity: 1;
+  transform: translateY(0);
+}
+}
+/* ===========================
+ Ad Content Enhancements
+=========================== */
+
+/* Style for the location paragraph to align icon and text */
+.ad-content .location {
+font-size: 0.9rem;          /* Keep original size */
+color: #666;               /* Keep original color */
+margin-bottom: 0.5rem;    /* Adjusted margin slightly */
+display: flex;            /* Use flexbox for alignment */
+align-items: center;      /* Vertically center icon and text */
+}
+
+/* Style for the small location icon */
+.ad-content .location-pin-icon {
+width: 12px;              /* Adjust size as needed */
+height: 12px;
+margin-right: 5px;        /* Space between icon and text */
+flex-shrink: 0;           /* Prevent icon from shrinking */
+}
+
+/* ======================================
+ Ad Content Category/Subcategory Tags
+====================================== */
+
+/* Container paragraph for the tags */
+.ad-content .category-info {
+margin-bottom: 0.8rem; /* Spacing below the line */
+line-height: 1.5;      /* Add slightly more line height in case tags wrap */
+color: #555;           /* Default color for text within (like the '•') */
+}
+
+/* Common styles for both category and subcategory tags */
+.ad-content .category-tag,
+.ad-content .subcategory-tag {
+font-size: 0.75rem;       /* Slightly smaller font for tags */
+color: #1DBFC1;           /* Requested text color */
+background-color: #e0f7fa; /* Light cyan/blue background */
+border: 1px solid #b2ebf2; /* Slightly darker border */
+border-radius: 12px;      /* Slightly adjusted border radius */
+padding: 3px 8px;         /* Slightly reduced padding */
+display: inline-block;    /* Important: Makes background wrap content */
+margin: 2px 3px;          /* Adds a small space around each tag */
+white-space: nowrap;      /* Prevent text inside a tag from wrapping */
+}
+
+/* Optional: Add hover effect if desired */
+/*
+.ad-content .category-tag:hover,
+.ad-content .subcategory-tag:hover {
+background-color: #b2ebf2;
+color: #0b7e80;
+}
+*/
+
+/* Ensure other elements are spaced correctly */
+.ad-content .divider {
+height: 1px;
+background: #eee;
+margin: 0.5rem 0;
+}
+
+.ad-content .price-section {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-top: 0.5rem;
+}

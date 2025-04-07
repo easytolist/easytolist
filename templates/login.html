@@ -1,0 +1,45 @@
+{{template "base.html" .}}
+
+{{define "title"}}Login - EasyToList{{end}}
+
+{{define "head_extra"}}
+    <link rel="stylesheet" href="/static/login.css">
+{{end}}
+
+{{define "content"}}
+    <div class="login-container">
+        <h2 class="login-heading">Login</h2>
+
+        <!-- Success Message -->
+        {{if .SuccessMessage}}
+        <div class="success-message">{{.SuccessMessage}}</div>
+        {{end}}
+
+        <form method="POST" action="/login">
+
+            <div class="input-group">
+                <input type="email" name="email" class="login-input" placeholder="Email" required>
+            </div>
+
+            <div class="input-group">
+                <input type="password" name="password" class="login-input" placeholder="Password" required>
+            </div>
+
+            <!-- Forgot Password Link -->
+            <p class="forget-password-link">
+                <a href="/password/reset">Forgot Your Password?</a>
+            </p>
+
+            <button type="submit" class="login-button">Login</button>
+        </form>
+
+        <p class="signup-link">
+            Don't have an account?
+            <a href="/signup">Sign up here</a>
+        </p>
+    </div>
+{{end}}
+
+{{define "scripts_extra"}}
+    {{/* Add any page-specific scripts for login page here if needed */}}
+{{end}}

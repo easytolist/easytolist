@@ -1,0 +1,39 @@
+{{template "base.html" .}}
+
+{{define "title"}}Signup - EasyToList{{end}}
+
+{{define "head_extra"}}
+    <link rel="stylesheet" href="/static/signup.css">
+{{end}}
+
+{{define "content"}}
+    <div class="signup-container">
+        <h2 class="signup-heading">Sign Up</h2>
+
+        <form class="signup-form" action="/signup" method="POST">
+
+            <div class="input-group">
+                <input type="text" id="name" name="name" class="signup-input" placeholder="Full Name" required>
+            </div>
+
+            <div class="input-group">
+                <input type="email" id="email" name="email" class="signup-input" placeholder="Email Address" required>
+            </div>
+
+            <div class="input-group">
+                <input type="password" id="password" name="password" class="signup-input" placeholder="Password" required>
+            </div>
+
+            <button type="submit" class="signup-button">Signup</button>
+        </form>
+
+        <p class="login-link">
+            Already registered?
+            <a href="/login">Login here</a>
+        </p>
+    </div>
+{{end}}
+
+{{define "scripts_extra"}}
+    {{/* Add any page-specific scripts for signup page here if needed */}}
+{{end}}

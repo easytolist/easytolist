@@ -1,0 +1,42 @@
+{{define "search_bar"}}
+
+<section class="search-section">
+    <form class="search-form" id="filterForm">
+      <input type="text" placeholder="Looking for..." name="search" id="searchInput" required>
+      <div class="custom-select">
+        <select id="category" name="category" required>
+            <option value="" disabled selected>Category</option>
+            <option value="all">All Categories</option>
+            <option value="mobile">Mobile & Accessories</option>
+            <option value="jobs">Jobs</option>
+            <option value="real_estate">Real Estate</option>
+            <option value="vehicle">Vehicles</option>
+            <option value="electronics">Electronics & Appliances</option>
+            <option value="education">Education & Training</option>
+            <option value="personal">Personal & Dating</option>
+            <option value="home">Home & Furniture</option>
+            <option value="fashion">Fashion & Beauty</option>
+            <option value="services">Services</option>
+            <option value="pets">Pets & Animals</option>
+            <option value="sports">Sports, Hobbies & Books</option>
+            <option value="kids">Kids & Babies</option>
+            <option value="agriculture">Agriculture & Farming</option>
+            <option value="business">Business & Industrial</option>
+        </select>
+      </div>
+      <div class="custom-select">
+        <select id="subcategory" name="subcategory" required>
+          <option value="" disabled selected>Subcategory</option>
+        </select>
+      </div>
+      <div class="custom-select state-input">
+        <input type="text" name="state" id="stateInput" placeholder="State" required>
+        <img src="/static/locationicon.png" alt="Location Icon" class="location-icon" id="locationIcon">
+      </div>
+      <input type="text" placeholder="Pincode" name="pincode" id="pincodeInput" required>
+      <input type="hidden" name="lat" id="latInput">
+      <input type="hidden" name="lng" id="lngInput">
+      <button type="submit" class="search-btn">Search Now</button>
+    </form>
+</section>
+{{end}}

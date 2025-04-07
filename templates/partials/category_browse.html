@@ -1,0 +1,23 @@
+{{define "category_browse"}}
+
+<section class="category-browse-section">
+    <h2>Browse by Category</h2>
+    <div class="category-grid" id="categoryGrid">
+      <!-- JavaScript will populate this -->
+    </div>
+    <div class="subcategory-container" id="subcategoryContainer">
+      <!-- JavaScript will manage content here -->
+    </div>
+</section>
+<!-- Container for Category Browse RESULTS (Populated by JS when subcategory clicked) -->
+<div class="category-results-container" id="categoryResultsContainer" style="display: none;">
+    <h2 id="categoryResultsHeading"></h2>
+    <section class="ads-grid category-ads-grid" id="categoryAdsGrid">
+      <!-- JavaScript will populate this -->
+    </section>
+    <div class="pagination-container" style="text-align: center; margin: 20px 0;">
+      <button id="categoryShowMoreBtn" class="show-more-btn" style="display: none; padding: 10px 20px; font-size: 16px; background-color: #1DBFC1; color: white; border: none; border-radius: 25px; cursor: pointer; transition: background-color 0.3s ease;">Show More</button>
+    </div>
+</div>
+{{end}}
+

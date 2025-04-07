@@ -1,0 +1,65 @@
+{{/* Extends the base layout */}}
+{{template "base.html" .}}
+
+{{/* Define the title for the index page */}}
+{{define "title"}}EasyToList - Home{{end}}
+
+{{/* Define page-specific head elements (if any) */}}
+{{define "head_extra"}}
+    <!-- No extra head elements needed specifically for index page for now -->
+{{end}}
+
+{{/* Define the main content for the index page */}}
+{{define "content"}}
+<main class="container">
+    <h1 class="section-heading">Latest Posts</h1>
+    <!-- Ads Grid Section for Latest Posts -->
+    <section class="ads-grid">
+      {{ range .Ads }} <!-- Start of Go template loop for initial ads -->
+      <div class="ad-card">
+        <div class="carousel" data-ad-id="{{ .ID }}">
+          <div class="carousel-inner">
+            {{ range $index, $img := .ImagePaths }}
+            <div class="carousel-item {{ if eq $index 0 }}active{{ end }}"> <img src="/uploads/{{ $img }}" alt="Ad Image" loading="lazy"> </div>
+            {{ else }}
+            <div class="carousel-item active"> <img src="/static/default-image.jpg" alt="No Image"> </div>
+            {{ end }}
+          </div>
+          {{ if gt (len .ImagePaths) 1 }}
+          <div class="carousel-dots">
+            {{ range $index, $img := .ImagePaths }}
+            <span class="dot {{ if eq $index 0 }}active{{ end }}" data-index="{{ $index }}"></span>
+            {{ end }}
+          </div>
+          {{ end }}
+        </div>
+        <a href="/ad/{{ .ID }}" class="ad-card-wrapper">
+          <div class="ad-content">
+            <h2 class="ad-title">{{ .Title }}</h2>
+            <p class="location"> <img src="/static/locationicon.png" alt="Location" class="location-pin-icon"> <span>{{ .City }}, {{ .State }}</span> </p>
+            <p class="category-info"> <span class="category-tag">{{ .Category }}</span> • <span class="subcategory-tag">{{ .Subcategory }}</span> </p>
+            <div class="divider"></div>
+            <div class="price-section"> <span class="price">₹{{ formatPrice .Price }}</span> <img src="/static/pageopenicon.png" alt="View" class="view-icon"> </div>
+          </div>
+        </a>
+      </div>
+      {{ end }} <!-- End of Go template loop -->
+    </section>
+
+    <!-- Pagination Button for "Latest Posts" / Filter Results shown in this grid -->
+    <div class="pagination-container" style="text-align: center; margin: 20px 0;">
+      <button id="showMoreBtn" style="padding: 10px 20px; font-size: 16px; background-color: #1DBFC1; color: white; border: none; border-radius: 25px; cursor: pointer; transition: background-color 0.3s ease;">Show More</button>
+    </div>
+</main>
+{{end}}
+
+{{/* Define page-specific scripts (if any, beyond the base script) */}}
+{{define "scripts_extra"}}
+    <!-- The main script is already in base.html -->
+    <!-- Add any scripts ONLY needed for the index page here -->
+    <script>
+        console.log("Index page specific script block executing (if needed).");
+        // Example: If you had logic ONLY for the index page, it would go here.
+        // However, all current logic seems common or handled conditionally in the base script.
+    </script>
+{{end}}

@@ -1,0 +1,604 @@
+{{define "title"}}Account - EasyToList{{end}}
+
+{{define "head_extra"}}
+  <link rel="stylesheet" href="/static/account.css">
+  <style>
+      /* Chat Modal Styles */
+      .chat-modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
+      .chat-modal-content { background-color: #fff; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 600px; position: relative; }
+      .close-chat { position: absolute; top: 10px; right: 20px; font-size: 28px; font-weight: bold; cursor: pointer; }
+      .chat-messages { height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; }
+      .chat-message { margin-bottom: 10px; }
+      .chat-message.sent { text-align: right; }
+      .message-header { display: flex; justify-content: space-between; font-size: 0.9em; margin-bottom: 4px; }
+      .message-content { font-size: 1em; }
+      .ad-preview { display: flex; align-items: center; margin-bottom: 8px; }
+      .ad-preview img { width: 60px; height: 60px; object-fit: cover; margin-right: 10px; }
+      .ad-info h3 { margin: 0; font-size: 1.1em; }
+      .ad-info p { margin: 2px 0; font-size: 0.9em; }
+    </style>
+{{end}}
+
+{{define "search_section"}}
+  {{/* Intentionally left blank - overriding base.html */}}
+{{end}}
+
+{{define "category_browse_section"}}
+  {{/* Intentionally left blank - overriding base.html */}}
+{{end}}
+
+
+{{/* --- MAIN CONTENT for the account page --- */}}
+{{define "content"}}
+<main class="account-container" data-user-id="{{.User.ID}}"> {{/* Added user ID data attribute here */}}
+    <!-- Left Navigation -->
+    <aside class="account-sidebar">
+      <nav class="account-menu">
+        <button class="menu-item active" data-section="profile"><img src="/static/profileicon.png" alt="Profile" class="menu-icon"> Profile </button>
+        <button class="menu-item" data-section="membership"><img src="/static/membershipicon.png" alt="Membership" class="menu-icon"> Membership </button>
+        <button class="menu-item" data-section="manage-ads"><img src="/static/manageadsicon.png" alt="Manage Ads" class="menu-icon"> Manage Ads </button>
+        <button class="menu-item" data-section="messages"><img src="/static/messageicon.png" alt="Messages" class="menu-icon"> Messages </button>
+        <form action="/logout" method="GET" class="menu-item-form"> <button type="submit" class="menu-item signout"><img src="/static/signouticon.png" alt="Sign Out" class="menu-icon"> Sign Out </button> </form>
+      </nav>
+    </aside>
+
+    <!-- Right Content Sections -->
+    <div class="account-content">
+      <!-- Profile Section -->
+      <section id="profile" class="content-section active">
+        <div class="profile-header"> <h2>Profile</h2> <div class="profile-actions"> <button class="btn-secondary" data-subsection="personal-info">Personal Information</button> <button class="btn-secondary" data-subsection="change-password">Change Password</button> </div> </div>
+        <div id="personal-info" class="subsection active"> <div class="info-card"> <p>Name: {{.User.Name}}</p> <p>Email: {{.User.Email}}</p> </div> </div>
+        <div id="change-password" class="subsection"> <form class="password-form" action="/change-password" method="POST"> <input type="password" name="current_password" placeholder="Current Password" required> <input type="password" name="new_password" placeholder="New Password" required> <input type="password" name="confirm_password" placeholder="Confirm New Password" required> <button type="submit" class="btn-primary">Change Password</button> </form> </div>
+      </section>
+
+      <!-- Membership Section -->
+      <section id="membership" class="content-section">
+        <div class="membership-header"> <h2>Membership</h2> <div class="membership-buttons"> <button class="btn-primary plan-switch active" data-plan="free">Free Plan</button> <button class="btn-primary plan-switch" data-plan="upgrade">Upgrade Plan</button> </div> </div>
+        <div id="free-plan" class="plan-details active"> <div class="plan-item"> <span class="plan-label">Current Plan:</span> <span class="plan-value">Free</span> </div> <div class="plan-item"> <span class="plan-label">Package Amount:</span> <span class="plan-value">Free</span> </div> <div class="plan-item"> <span class="plan-label">Maximum Ads/Month:</span> <span class="plan-value">5</span> </div> <div class="plan-item"> <span class="plan-label">Payment Status:</span> <span class="plan-value">—</span> </div> <div class="plan-item"> <span class="plan-label">Next Payment Date:</span> <span class="plan-value">—</span> </div> </div>
+        <div id="upgrade-plan" class="plan-details"> <div class="plan-item"> <span class="plan-label bold-gap">Current Plan:</span> <span class="plan-value bold-gap">Paid</span> </div> <div class="plan-item"> <span class="plan-label">Package Amount:</span> <span class="plan-value">₹100</span> </div> <div class="plan-item"> <span class="plan-label">Maximum Ads/Month:</span> <span class="plan-value">Unlimited</span> </div> <div class="plan-item"> <span class="plan-label">Payment Status:</span> <span class="plan-value">Not Upgraded</span> </div> <div class="plan-item"> <span class="plan-label">Next Payment Date:</span> <span class="plan-value">—</span> </div> </div>
+      </section>
+
+      <!-- Manage Ads Section -->
+      <section id="manage-ads" class="content-section">
+        <h2>Your Ads</h2>
+        <div class="ads-list">
+          {{range .Ads}}
+          <div class="ad-item" data-ad-id="{{.ID}}">
+            <div class="view-mode active">
+              <div class="carousel"> <div class="carousel-inner"> {{range .Images}} <div class="carousel-item"> <img src="/uploads/{{.}}" alt="Ad image"> </div> {{else}} <div class="carousel-item"> <img src="/static/default-image.jpg" alt="No image"> </div> {{end}} </div> </div>
+              <h3>{{.Title}}</h3> <p>{{.Description}}</p>
+              <div class="ad-actions"> <button class="btn-small edit-ad">Edit</button> <button class="btn-small delete-ad">Delete</button> </div>
+            </div>
+            <form class="edit-mode" method="POST" action="/edit-ad" enctype="multipart/form-data">
+              <input type="hidden" name="ad_id" value="{{.ID}}">
+              <div class="image-manager">
+                <div class="existing-images"> {{range .Images}} <div class="image-preview"> <img src="/uploads/{{.}}"> <span class="delete-image">×</span> <input type="hidden" name="existing_images[]" value="{{.}}"> </div> {{end}} </div>
+                <input type="file" name="images" multiple accept="image/*"> <input type="hidden" name="deleted_images" class="deleted-images">
+              </div>
+              <input type="text" name="title" value="{{.Title}}" required> <textarea name="description" required>{{.Description}}</textarea>
+              <div class="form-actions"> <button type="button" class="btn-small cancel-edit">Cancel</button> <button type="submit" class="btn-small save-changes">Save</button> </div>
+            </form>
+          </div>
+          {{end}}
+        </div>
+      </section>
+
+      <!-- Messages Section -->
+      <section id="messages" class="content-section">
+        <h2>Messages</h2>
+        {{ if .Conversations }}
+        <div class="conversation-list">
+            {{ range .Conversations }}
+            <div class="conversation-item" data-ad-id="{{.AdID}}" data-other-user="{{.OtherUserID}}">
+                <div class="ad-preview">
+                    {{ if .AdImages }} <img src="/uploads/{{ index .AdImages 0 }}" alt="Ad image"> {{else}} <img src="/static/default-image.jpg" alt="No image"> {{ end }}
+                    <div class="ad-info"> <h3>{{.AdTitle}}</h3> <p>Price: ₹{{formatPrice .AdPrice}}</p> <p>Location: {{.AdCity}}, {{.AdState}}</p> </div>
+                </div>
+                <span class="timestamp">{{formatTime .LastMessageTime}}</span> {{/* Use formatTime helper */}}
+            </div>
+            {{ end }}
+        </div>
+        {{ else }} <p>No conversations yet.</p> {{ end }}
+      </section>
+    </div><!-- End account-content -->
+</main>
+
+<!-- Chat Modal (Keep this with the main content) -->
+<div id="chatModal" class="chat-modal">
+    <div class="chat-modal-content"> <span class="close-chat">×</span> <h2 id="chatAdTitle">Chat</h2> <div id="chatMessages" class="chat-messages"></div> <div class="chat-input"> <input type="text" id="chatMessageInput" placeholder="Type your message..."> <button id="sendChatMessage">Send</button> </div> </div>
+</div>
+{{end}} {{/* End of "content" block */}}
+
+
+{{/* --- PAGE-SPECIFIC SCRIPTS for account page --- */}}
+{{define "scripts_extra"}}
+<script>
+    // All the JavaScript specific to account page functionality
+    // (Section switching, modal, ad editing, etc.) goes here.
+    // This script runs AFTER the base.html script.
+
+    console.log("Account page specific script block executing.");
+
+    let ws = null;
+    let currentUserID; // Will be fetched or set
+    let currentAdID;
+    let currentOtherUserID;
+
+    // Get user ID from data attribute on main container
+    const accountContainer = document.querySelector('.account-container');
+    if (accountContainer) {
+        currentUserID = parseInt(accountContainer.dataset.userId, 10);
+        if(isNaN(currentUserID)) {
+             console.error("Could not parse current User ID from data attribute.");
+             // Handle error - maybe disable chat features?
+        } else {
+             console.log("Current User ID:", currentUserID);
+        }
+    } else {
+        console.error("Account container not found to get user ID.");
+    }
+
+
+    function connectWebSocket() {
+        // Only connect if needed (e.g., when messages tab is active or modal opens)
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            console.log("WebSocket already open.");
+            return;
+        }
+        if (ws && ws.readyState === WebSocket.CONNECTING) {
+            console.log("WebSocket is connecting...");
+            return;
+        }
+
+        const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+        const wsURL = wsProtocol + window.location.host + "/ws";
+        console.log("Connecting WebSocket:", wsURL);
+
+        ws = new WebSocket(wsURL);
+
+        ws.onopen = function() {
+            console.log("WebSocket connected for account page.");
+        };
+
+        ws.onmessage = function(event) {
+            try {
+                const msg = JSON.parse(event.data);
+                console.log("WS Message Received (Account):", msg);
+                // Only handle if the chat modal is open and relevant
+                const chatModal = document.getElementById('chatModal');
+                if (chatModal && chatModal.style.display === 'block' && msg.ad_id === parseInt(currentAdID) && (msg.sender_id === currentUserID || msg.sender_id === parseInt(currentOtherUserID)) ) {
+                     handleWebSocketMessage(msg);
+                } else {
+                     console.log("Ignoring WS message (modal closed or different chat).");
+                     // Optionally: Show a notification for new messages in other chats
+                }
+            } catch (e) {
+                 console.error("Error parsing WebSocket message (Account):", e, event.data);
+            }
+        };
+
+        ws.onerror = function(error) {
+             console.error("WebSocket Error (Account):", error);
+        };
+
+        ws.onclose = function(event) {
+            console.log('WebSocket disconnected (Account):', event.code, event.reason);
+            ws = null;
+            // Optional: Simple reconnect logic if needed persistently
+            // setTimeout(connectWebSocket, 5000); // Reconnect after 5 seconds
+        };
+    }
+
+    function formatTimestamp(isoString) {
+        if (!isoString) return "";
+        try {
+             const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+             return new Date(isoString).toLocaleString('en-IN', options);
+        } catch (e) {
+             console.error("Error formatting timestamp:", e, isoString);
+             return "Invalid Date";
+        }
+    }
+
+    function handleWebSocketMessage(msg) {
+        const chatMessages = document.getElementById('chatMessages');
+        if (!chatMessages) return;
+
+        const msgDiv = document.createElement('div');
+        msgDiv.classList.add('chat-message');
+
+        // Use the globally stored currentUserID fetched earlier
+        const isCurrentUserSender = msg.sender_id === currentUserID;
+
+        if (isCurrentUserSender) {
+            msgDiv.classList.add('sent');
+        } else {
+             msgDiv.classList.add('received'); // Optional class for styling received messages
+        }
+
+        msgDiv.innerHTML = `
+            <div class="message-header">
+            <strong>${msg.sender_name || 'Unknown Sender'}</strong>
+            <span class="timestamp">${formatTimestamp(msg.timestamp)}</span>
+            </div>
+            <div class="message-content">${msg.message || ''}</div>
+        `;
+
+        chatMessages.appendChild(msgDiv);
+        // Scroll to the bottom
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+
+    // --- DOMContentLoaded equivalent for this script block ---
+    document.addEventListener('DOMContentLoaded', function() {
+         console.log("Account page specific DOM ready.");
+
+        // Section switching for left menu
+        const menuItems = document.querySelectorAll('.account-menu .menu-item'); // More specific selector
+        menuItems.forEach(function(item) {
+            item.addEventListener('click', function(e) {
+                if (!item.classList.contains('signout')) { e.preventDefault(); }
+
+                const sectionId = this.dataset.section;
+                if (sectionId) {
+                    document.querySelectorAll('.account-content .content-section').forEach(function(section) {
+                        section.classList.remove('active');
+                    });
+                    menuItems.forEach(function(mi) {
+                        mi.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    const targetSection = document.getElementById(sectionId);
+                    if (targetSection) {
+                         targetSection.classList.add('active');
+                         console.log(`Switched to section: ${sectionId}`);
+                         // Connect WebSocket ONLY when messages tab is activated
+                         if (sectionId === 'messages') {
+                              //connectWebSocket(); // Consider connecting only when a conversation is opened
+                         }
+                    } else {
+                         console.warn(`Target section #${sectionId} not found.`);
+                    }
+                }
+            });
+        });
+
+         // Profile subsection switching
+         const subsectionButtons = document.querySelectorAll('.profile-actions .btn-secondary[data-subsection]');
+         subsectionButtons.forEach(function(button) {
+             button.addEventListener('click', function() {
+                 const subsectionId = this.dataset.subsection;
+                 if (!subsectionId) return;
+                 // Hide all subsections within the profile section
+                 document.querySelectorAll('#profile .subsection').forEach(function(sub) {
+                     sub.classList.remove('active');
+                 });
+                 // Show the target subsection
+                 const targetSub = document.getElementById(subsectionId);
+                 if (targetSub) {
+                     targetSub.classList.add('active');
+                     console.log(`Switched to profile subsection: ${subsectionId}`);
+                 } else {
+                      console.warn(`Target profile subsection #${subsectionId} not found.`);
+                 }
+             });
+         });
+
+        // Membership Plan Switching
+        document.querySelectorAll('.membership-buttons .plan-switch').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.membership-buttons .plan-switch').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                document.querySelectorAll('#membership .plan-details').forEach(detail => detail.classList.remove('active'));
+                const planType = this.dataset.plan;
+                const targetPlan = document.getElementById(planType + '-plan');
+                if(targetPlan) {
+                     targetPlan.classList.add('active');
+                     console.log(`Switched to membership plan view: ${planType}`);
+                } else {
+                     console.warn(`Target membership plan #${planType}-plan not found.`);
+                }
+            });
+        });
+
+
+        // --- Manage Ads Functionality ---
+         // Edit button
+         document.querySelectorAll('.edit-ad').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const adItem = btn.closest('.ad-item');
+                if (!adItem) return;
+                const viewMode = adItem.querySelector('.view-mode');
+                const editMode = adItem.querySelector('.edit-mode');
+                if(viewMode) viewMode.classList.remove('active');
+                if(editMode) editMode.classList.add('active');
+            });
+        });
+
+        // Cancel edit button
+        document.querySelectorAll('.cancel-edit').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const adItem = btn.closest('.ad-item');
+                 if (!adItem) return;
+                const viewMode = adItem.querySelector('.view-mode');
+                const editMode = adItem.querySelector('.edit-mode');
+                if(editMode) editMode.classList.remove('active');
+                if(viewMode) viewMode.classList.add('active');
+                // Optional: Reset form fields or image previews if needed
+            });
+        });
+
+        // Delete existing image button
+         document.querySelectorAll('.existing-images .delete-image').forEach(function(btn) {
+             btn.addEventListener('click', function() {
+                const imagePreviewDiv = btn.closest('.image-preview');
+                if (!imagePreviewDiv) return;
+                const editForm = imagePreviewDiv.closest('.edit-mode');
+                if (!editForm) return;
+
+                const deletedInput = editForm.querySelector('.deleted-images');
+                const imagePathInput = imagePreviewDiv.querySelector('input[name="existing_images[]"]'); // Find the hidden input holding the path
+
+                if (!deletedInput || !imagePathInput) {
+                     console.error("Could not find deleted images input or image path input.");
+                     return;
+                }
+
+                const imagePath = imagePathInput.value;
+                let deleted = deletedInput.value ? deletedInput.value.split(',') : [];
+                if (!deleted.includes(imagePath)) {
+                    deleted.push(imagePath);
+                    deletedInput.value = deleted.join(',');
+                    console.log("Marked for deletion:", imagePath, " New list:", deletedInput.value);
+                }
+                imagePreviewDiv.remove(); // Remove the preview from the DOM
+
+                // Update max allowed for file input (Optional based on your logic)
+                // const remaining = editForm.querySelectorAll('.image-preview').length;
+                // const fileInput = editForm.querySelector('input[type="file"]');
+                // if(fileInput) fileInput.dataset.maxAllowed = 5 - remaining;
+            });
+        });
+
+        // Delete ad button
+        document.querySelectorAll('.delete-ad').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                if (confirm('Are you sure you want to delete this ad and all associated messages?')) {
+                    const adItem = btn.closest('.ad-item');
+                    if (!adItem) return;
+                    const adId = adItem.dataset.adId;
+                    if (!adId) {
+                         alert("Could not get Ad ID to delete.");
+                         return;
+                    }
+
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '/delete-ad'; // Make sure this matches your Go route
+
+                    const hiddenField = document.createElement('input');
+                    hiddenField.type = 'hidden';
+                    hiddenField.name = 'ad_id';
+                    hiddenField.value = adId;
+                    form.appendChild(hiddenField);
+
+                    document.body.appendChild(form);
+                    form.submit();
+                    // No .then() here, page will reload on success/redirect from server
+                }
+            });
+        });
+
+        // File input handling for new images (complex, keep as is for now if working)
+        document.querySelectorAll('input[type="file"][name="images"]').forEach(function(input) {
+             // This DataTransfer logic is advanced, ensure it works correctly.
+            if (!input._dt) input._dt = new DataTransfer();
+            input.addEventListener('change', function(event) {
+                const maxAllowed = 5;
+                const imageManager = input.closest('.image-manager');
+                if (!imageManager) return;
+                const previewContainer = imageManager.querySelector('.existing-images');
+                 if (!previewContainer) return;
+
+                const existingCount = previewContainer.querySelectorAll('.image-preview:not(.new-image)').length;
+                const currentNewCount = input._dt.files.length; // Files already staged
+                const totalStaged = existingCount + currentNewCount;
+
+                const newFiles = Array.from(event.target.files); // Files just selected
+                let addedCount = 0;
+
+                for (const file of newFiles) {
+                     if (totalStaged + addedCount >= maxAllowed) {
+                          alert(`You can only upload a total of ${maxAllowed} images.`);
+                          break; // Stop adding more files
+                     }
+
+                     // Add file to DataTransfer
+                     input._dt.items.add(file);
+                     addedCount++;
+
+                     // Create and append preview
+                     const reader = new FileReader();
+                     reader.onload = function(e) {
+                         const previewDiv = document.createElement('div');
+                         previewDiv.className = 'image-preview new-image'; // Mark as new
+                         const img = document.createElement('img');
+                         img.src = e.target.result;
+                         img.alt = "New image preview";
+
+                         const deleteBtn = document.createElement('span');
+                         deleteBtn.className = 'delete-image';
+                         deleteBtn.innerHTML = '×';
+                         deleteBtn.onclick = function() { // Use onclick for simplicity here
+                             previewDiv.remove();
+                             // Remove from DataTransfer
+                             const dt = new DataTransfer();
+                             let found = false;
+                             Array.from(input._dt.files).forEach(function(f) {
+                                 // Need a reliable way to identify the file to remove
+                                 // Comparing by name might be okay if names are unique enough in selection
+                                 if (!found && f.name === file.name) {
+                                     found = true; // Remove only the first match
+                                 } else {
+                                     dt.items.add(f);
+                                 }
+                             });
+                             input._dt = dt;
+                             input.files = dt.files; // Update the input's files collection
+                             console.log("Removed new image preview. Remaining staged:", input.files.length);
+                         };
+
+                         previewDiv.appendChild(img);
+                         previewDiv.appendChild(deleteBtn);
+                         previewContainer.appendChild(previewDiv);
+                     };
+                     reader.readAsDataURL(file);
+                 } // End for loop
+
+                 // Update the input's actual files property
+                 input.files = input._dt.files;
+                 console.log("Total images staged:", input.files.length);
+
+                 // Clear the original input value visually after processing
+                 event.target.value = null;
+             });
+         });
+
+
+        // --- Conversation Click & Chat Modal ---
+        const chatModal = document.getElementById('chatModal');
+        const closeChatButton = chatModal ? chatModal.querySelector('.close-chat') : null;
+        const chatAdTitle = document.getElementById('chatAdTitle');
+        const chatMessagesDiv = document.getElementById('chatMessages');
+        const chatMessageInput = document.getElementById('chatMessageInput');
+        const sendChatMessageButton = document.getElementById('sendChatMessage');
+
+        document.querySelectorAll('.conversation-item').forEach(item => {
+            item.addEventListener('click', function() {
+                currentAdID = this.dataset.adId;
+                currentOtherUserID = this.dataset.otherUser;
+                if (!currentAdID || !currentOtherUserID) {
+                     alert("Error: Missing conversation details.");
+                     return;
+                }
+                openChatForConversation(currentAdID, currentOtherUserID, this);
+            });
+        });
+
+        if (closeChatButton) {
+            closeChatButton.addEventListener('click', function() {
+                if (chatModal) chatModal.style.display = 'none';
+                if (chatMessagesDiv) chatMessagesDiv.innerHTML = ''; // Clear messages
+                 currentAdID = null; // Reset context
+                 currentOtherUserID = null;
+                 // Maybe disconnect WebSocket if not needed elsewhere? ws?.close();
+            });
+        }
+
+        // Close modal if clicking outside content
+        window.addEventListener('click', function(event) {
+            if (event.target == chatModal) {
+                 if (chatModal) chatModal.style.display = 'none';
+                if (chatMessagesDiv) chatMessagesDiv.innerHTML = '';
+                 currentAdID = null;
+                 currentOtherUserID = null;
+            }
+        });
+
+        function openChatForConversation(adID, otherUserID, element) {
+             if (!chatModal || !chatAdTitle || !chatMessagesDiv || !chatMessageInput || !sendChatMessageButton) {
+                 console.error("Chat modal elements missing.");
+                 return;
+             }
+
+             connectWebSocket(); // Ensure connection is active
+
+             const adTitle = element.querySelector('.ad-info h3')?.innerText || 'Ad Chat';
+             chatAdTitle.innerText = `Chat for: ${adTitle}`;
+             chatModal.style.display = 'block';
+             chatMessagesDiv.innerHTML = '<p style="text-align:center; color:grey;">Loading messages...</p>'; // Loading indicator
+
+             // Fetch conversation history
+             fetch(`/get-conversation?ad_id=${adID}&other_user=${otherUserID}`)
+             .then(response => {
+                 if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); }
+                 return response.json();
+             })
+             .then(data => {
+                // Ensure currentUserID is set before processing messages
+                if (typeof currentUserID === 'undefined') {
+                     console.error("Current user ID not available yet.");
+                     // Maybe fetch it here if needed, or wait?
+                     // For now, log error and continue, messages might render incorrectly aligned.
+                }
+
+                 chatMessagesDiv.innerHTML = ''; // Clear loading message
+                 if (data.messages && data.messages.length > 0) {
+                     data.messages.forEach(msg => {
+                         handleWebSocketMessage({ // Simulate a WS message structure for consistent rendering
+                             sender_id: msg.senderID, // Use correct field name from getConversationHandler
+                             sender_name: msg.senderName,
+                             message: msg.content,
+                             timestamp: msg.timestamp, // Use timestamp from fetched data
+                             ad_id: parseInt(adID) // Ensure ad_id is included if needed by handler
+                         });
+                     });
+                 } else {
+                      chatMessagesDiv.innerHTML = '<p style="text-align:center; color:grey;">No messages in this conversation yet.</p>';
+                 }
+                 chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight; // Scroll down
+             })
+             .catch(err => {
+                  console.error('Error loading conversation:', err);
+                  chatMessagesDiv.innerHTML = '<p style="text-align:center; color:red;">Failed to load messages.</p>';
+             });
+
+
+             // --- Send Message Handler (inside openChatForConversation to capture context) ---
+             sendChatMessageButton.onclick = async function() {
+                 const content = chatMessageInput.value.trim();
+                 if (!content) return;
+                 if (!currentAdID || !currentOtherUserID) {
+                      alert("Error: Cannot send message, conversation context lost.");
+                      return;
+                 }
+                  if (!ws || ws.readyState !== WebSocket.OPEN) {
+                      alert("Chat is not connected. Please wait or try reopening the chat.");
+                      connectWebSocket(); // Attempt reconnect
+                      return;
+                  }
+
+                 const messagePayload = {
+                     ad_id: parseInt(currentAdID),
+                     receiver_id: parseInt(currentOtherUserID), // Use receiver_id as expected by backend WS handler
+                     message: content
+                 };
+
+                 console.log("Sending message via WS:", messagePayload);
+
+                 try {
+                      ws.send(JSON.stringify(messagePayload));
+                      // Assume success, message will be echoed back via WS onmessage
+                      chatMessageInput.value = '';
+                      chatMessageInput.focus();
+                 } catch (error) {
+                       console.error('Error sending message via WebSocket:', error);
+                       alert('Failed to send message. Please check your connection.');
+                 }
+             }; // End sendChatMessageButton.onclick
+
+            // Also handle Enter key for sending message
+            chatMessageInput.onkeypress = function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault(); // Prevent form submission if it were in a form
+                    sendChatMessageButton.onclick(); // Trigger the click handler
+                }
+            };
+
+        } // End openChatForConversation
+
+    }); // End DOMContentLoaded
+
+</script>
+{{end}} {{/* End of "scripts_extra" block */}}

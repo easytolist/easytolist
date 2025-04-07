@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Default Title - Page specific templates will override this -->
+    <title>{{ block "title" . }}EasyToList{{ end }}</title>
+
+    <!-- Common CSS -->
+    <link rel="stylesheet" href="/static/styles.css"> <!-- Your main CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+
+    <!-- Placeholder for page-specific CSS or meta tags -->
+    {{ block "head_extra" . }}{{ end }}
+
+</head>
+<body>
+
+    <!-- Loading Overlay (Common) -->
+    <div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 1000; text-align: center;">
+      <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+        <img src="/static/spinner.gif" alt="Loading..." style="width:50px; height:50px;">
+        <p style="font-size: 16px; color: #333;">Loading...</p>
+      </div>
+    </div>
+
+    <!-- Include Header Partial -->
+    {{ template "header" . }}
+
+   <!-- Search Bar Section (Can be overridden) -->
+    {{ block "search_section" . }}
+    {{ if .ShowSearchCategorySections }}
+        {{ template "search_bar" . }}
+    {{ end }}
+    {{ end }}
+
+    <!-- Category Browse Section (Can be overridden) -->
+    {{ block "category_browse_section" . }}
+    {{ if .ShowSearchCategorySections }}
+        {{ template "category_browse" . }}
+    {{ end }}
+    {{ end }}
+    <!-- Main Content Block - Page specific templates fill this -->
+    {{ block "content" . }}
+        <!-- Default content if a page doesn't define this block -->
+    {{ end }}
+
+    <!-- Include Footer Partial -->
+    {{ template "footer" . }}
+
+    <!-- ====================================================== -->
+    <!--                  START COMMON JAVASCRIPT               -->
+    <!-- ====================================================== -->
+
+    <!-- Common JS Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+    <!-- Combined JavaScript Logic -->
+    <script>
+    /********************************************************
+     *                                                      *
+     *         GLOBAL VARIABLES & CONFIGURATION             *
+     *     (Needed by Search, Categories, potentially others) *
+     *                                                      *
+     ********************************************************/
+
+    const subcategories = {
+      mobile: ['Smartphones', 'Basic Phones', 'Mobile Accessories', 'Tablets & iPads'],
+      jobs: ['Full-Time Jobs', 'Part-Time Jobs', 'Freelance & Remote Jobs', 'Internship & Traineeships', 'Work from Home', 'Government Jobs', 'Teaching & Education', 'IT & Software Jobs', 'Customer Service Jobs', 'Marketing & Sales Jobs'],
+      real_estate: ['Apartments for Rent', 'Houses for Rent', 'Offices & Shops for Rent', 'Houses for Sale', 'Apartments for Sale', 'Land & Plots', 'Commercial Properties'],
+      vehicle: ['Cars', 'Motorcycles', 'Trucks & Commercial Vehicles', 'Bicycles', 'Boats & Watercraft', 'Auto Parts & Accessories', 'Rental Vehicles'],
+      electronics: ['Laptops & Computers', 'Computer Accessories', 'Cameras & Photography', 'TVs, Audio & Video', 'Home Appliances', 'Kitchen Appliances', 'Gaming Consoles & Accessories'],
+      education: ['Online Courses', 'Professional Certifications', 'Language Classes'],
+      personal: ['Men Seeking Women', 'Women Seeking Men', 'Men Seeking Men', 'Women Seeking Women', 'Friendship & Companionship', 'Casual Encounters', 'Long-Term Relationships', 'Marriage Proposals', 'Sugar Dating'],
+      home: ['Sofas & Dining Sets', 'Beds & Wardrobes', 'Home Decor', 'Office Furniture', 'Outdoor Furniture'],
+      fashion: ['Men’s Clothing', 'Women’s Clothing', 'Kids’ Clothing', 'Watches & Accessories', 'Skincare & Beauty Products', 'Shoes & Footwear'],
+      services: ['Home Repair & Maintenance', 'Moving & Transport Services', 'Tutors & Coaching', 'Web & IT Services', 'Travel & Tourism', 'Legal & Financial Services', 'Event Planning'],
+      pets: ['Dogs', 'Cats', 'Birds', 'Fish & Aquariums', 'Pet Accessories', 'Pet Adoption'],
+      sports: ['Gym & Fitness Equipment', 'Musical Instruments', 'Books & Magazines', 'Collectibles & Antiques', 'Camping & Outdoor Gear'],
+      kids: ['Toys & Games', 'Baby Clothing', 'Baby Gear (Strollers, Car Seats)'],
+      agriculture: ['Tractors & Machinery', 'Seeds & Plants', 'Fertilizers & Pesticides', 'Livestock'],
+      business: ['Office Supplies', 'Industrial Equipment', 'Wholesale & Bulk Items']
+    };
+
+    const PAGE_SIZE = 16;
+    const CATEGORY_PAGE_SIZE = 16;
+    let initialLoadPage = 1;
+    let currentFilterPage = 1;
+    let currentFilterParams = null;
+    let categoryCurrentPage = 1;
+    let currentSubcategoryFilter = null;
+
+    /********************************************************
+     *                                                      *
+     *                 UTILITY FUNCTIONS                    *
+     *    (Carousel, Ad Card Creation, Location, etc.)      *
+     *      (Needed by Index, Search, Categories)           *
+     ********************************************************/
+
+     // Function to initialize carousel for an ad card
+    function setupCarousel(carousel) {
+      if (!carousel || carousel.dataset.initialized) return;
+      const inner = carousel.querySelector('.carousel-inner');
+      const items = carousel.querySelectorAll('.carousel-item');
+      const dotsContainer = carousel.querySelector('.carousel-dots');
+      const dots = dotsContainer ? dotsContainer.querySelectorAll('.dot') : [];
+      let currentIndex = 0;
+      if (!inner || items.length <= 1) { if(dotsContainer) dotsContainer.style.display = 'none'; carousel.dataset.initialized = true; return; }
+      if(dotsContainer && dots.length > 0) dotsContainer.style.display = 'flex';
+      dots.forEach((dot, index) => { dot.addEventListener('click', (e) => { e.stopPropagation(); currentIndex = index; updateCarousel(); }); });
+      let touchStartX = 0;
+      carousel.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
+      carousel.addEventListener('touchend', (e) => { const touchEndX = e.changedTouches[0].clientX; const diff = touchStartX - touchEndX; if (Math.abs(diff) > 50) { if (diff > 0 && currentIndex < items.length - 1) { currentIndex++; } else if (diff < 0 && currentIndex > 0) { currentIndex--; } updateCarousel(); } });
+      function updateCarousel() { inner.style.transform = `translateX(-${currentIndex * 100}%)`; dots.forEach((dot, i) => { dot.classList.toggle('active', i === currentIndex); }); }
+      carousel.dataset.initialized = true;
+    }
+
+    // Function to create ad card HTML element (REUSED by Index, Search, Categories)
+    function createAdCard(ad) {
+      const adCard = document.createElement('div'); adCard.className = 'ad-card';
+      const imagePaths = ad.image_paths || ad.ImagePaths || []; const adId = ad.id || ad.ID; const adTitle = ad.title || ad.Title || 'Untitled Ad'; const adCity = ad.city || ad.City || 'N/A'; const adState = ad.state || ad.State || 'N/A'; const adCategory = ad.category || ad.Category || 'N/A'; const adSubcategory = ad.subcategory || ad.Subcategory || 'N/A'; const adPrice = ad.price !== undefined && ad.price !== null ? ad.Price || ad.price : null; const formattedPrice = (adPrice !== null) ? `₹${parseFloat(adPrice).toLocaleString('en-IN')}` : 'Price N/A';
+      const imagesHTML = imagePaths.length > 0 ? imagePaths.map((img, index) => `<div class="carousel-item ${index === 0 ? 'active' : ''}"><img src="/uploads/${img}" alt="Ad Image" loading="lazy"></div>`).join('') : `<div class="carousel-item active"><img src="/static/default-image.jpg" alt="No Image"></div>`;
+      const dotsHTML = imagePaths.length > 1 ? `<div class="carousel-dots">${imagePaths.map((_, index) => `<span class="dot ${index === 0 ? 'active' : ''}" data-index="${index}"></span>`).join('')}</div>` : '';
+      adCard.innerHTML = `<div class="carousel" data-ad-id="${adId}"><div class="carousel-inner">${imagesHTML}</div> ${dotsHTML}</div><a href="/ad/${adId}" class="ad-card-wrapper"><div class="ad-content"><h2 class="ad-title">${adTitle}</h2><p class="location"><img src="/static/locationicon.png" alt="Location" class="location-pin-icon"> <span>${adCity}, ${adState}</span></p><p class="category-info"><span class="category-tag">${adCategory.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span> • <span class="subcategory-tag">${adSubcategory.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span></p><div class="divider"></div><div class="price-section"> <span class="price">${formattedPrice}</span> <img src="/static/pageopenicon.png" alt="View" class="view-icon"> </div></div></a>`;
+      return adCard;
+    }
+
+    // Function to update the MAIN ads grid (used by Search Filters, possibly Index initial load if done via JS)
+    function updateAdsGrid(ads) {
+      const mainAdsGrid = document.querySelector('main.container > section.ads-grid'); const mainShowMoreBtn = document.getElementById('showMoreBtn'); const categoryResultsContainer = document.getElementById('categoryResultsContainer');
+      if (!mainAdsGrid) { console.warn("Main ads grid not found on this page for update."); return; } // Use warn, not error
+      if (categoryResultsContainer) categoryResultsContainer.style.display = 'none';
+      mainAdsGrid.innerHTML = '';
+      if (!ads || ads.length === 0) { mainAdsGrid.innerHTML = '<p style="text-align: center; grid-column: 1 / -1;">No ads found matching your criteria.</p>'; if (mainShowMoreBtn) mainShowMoreBtn.style.display = 'none'; return; }
+      ads.forEach(ad => { const adCard = createAdCard(ad); mainAdsGrid.appendChild(adCard); setupCarousel(adCard.querySelector('.carousel')); });
+      if (mainShowMoreBtn) { mainShowMoreBtn.style.display = (ads.length < PAGE_SIZE) ? 'none' : 'block'; mainShowMoreBtn.disabled = false; mainShowMoreBtn.textContent = 'Show More'; }
+    }
+
+    // Function to append ads to the MAIN grid (used by Index Show More, possibly Filter Show More)
+    function appendAdsToGrid(ads) {
+       const mainAdsGrid = document.querySelector('main.container > section.ads-grid'); const mainShowMoreBtn = document.getElementById('showMoreBtn');
+       if (!mainAdsGrid) { console.warn("Main ads grid not found on this page for appending."); return; } // Use warn
+       if (!ads || ads.length === 0) { if (mainShowMoreBtn) mainShowMoreBtn.style.display = 'none'; return; }
+       ads.forEach(ad => { const adCard = createAdCard(ad); mainAdsGrid.appendChild(adCard); setupCarousel(adCard.querySelector('.carousel')); });
+       if (mainShowMoreBtn) { mainShowMoreBtn.style.display = (ads.length < PAGE_SIZE) ? 'none' : 'block'; mainShowMoreBtn.disabled = false; mainShowMoreBtn.textContent = 'Show More'; }
+    }
+
+    // Function to fetch lat/lng via forward geocoding (Used by Search)
+    function fetchAndUpdateLatLng(state, pincode) {
+      return new Promise((resolve) => {
+        const latInput = document.getElementById('latInput'); const lngInput = document.getElementById('lngInput');
+        if (!latInput || !lngInput) { console.error("Lat/Lng input fields not found"); resolve({ lat: "", lng: "" }); return; }
+        if (!state || !pincode) { latInput.value = ""; lngInput.value = ""; console.log("State or Pincode missing, skipping forward geocode."); resolve({ lat: "", lng: "" }); return; }
+        console.log(`Attempting forward geocode for State: ${state}, Pincode: ${pincode}`);
+        fetch(`/forward-geocode?state=${encodeURIComponent(state)}&pincode=${encodeURIComponent(pincode)}`)
+          .then(response => { if (!response.ok) { return response.text().then(text => { throw new Error(`Geocoding HTTP error! Status: ${response.status}. Response: ${text}`); }); } return response.json(); })
+          .then(data => { if (data.lat && data.lng) { latInput.value = data.lat; lngInput.value = data.lng; console.log("Forward geocode successful. Updated lat/lng:", data.lat, data.lng); resolve({ lat: data.lat, lng: data.lng }); } else { latInput.value = ""; lngInput.value = ""; console.error("Forward geocoding failed: No lat/lng in response. Message: " + (data.error || 'Unknown reason'), data); resolve({ lat: "", lng: "" }); } })
+          .catch(error => { console.error("Forward geocoding fetch/processing error:", error); latInput.value = ""; lngInput.value = ""; resolve({ lat: "", lng: "" }); });
+      });
+    }
+
+    // In base.html <script> block
+
+// Function to handle location logic (Used by Search and Categories)
+function handleLocationLogic(showAlerts = true) {
+    // Attempt to get all elements potentially used by this function
+    const latInput = document.getElementById('latInput');
+    const lngInput = document.getElementById('lngInput');
+    const stateInput = document.getElementById('stateInput');
+    const pincodeInput = document.getElementById('pincodeInput');
+    const loadingOverlay = document.getElementById('loadingOverlay'); // General overlay
+
+    // --- ADDED CHECK ---
+    // If the core input elements expected by *this specific function*
+    // (usually from the search bar/filter area) are not found,
+    // then this function shouldn't run on this page. Exit gracefully.
+    if (!latInput || !lngInput || !stateInput || !pincodeInput) {
+        // console.log("handleLocationLogic: Skipping execution as required search/category inputs (latInput, lngInput, stateInput, pincodeInput) were not found on this page."); // Optional: Uncomment for debugging
+        return; // Exit the function silently
+    }
+    // --- END ADDED CHECK ---
+
+    // If we reached here, the core input elements *were* found.
+    // Now, just ensure the loading overlay exists before proceeding.
+    if (!loadingOverlay) {
+        console.error("handleLocationLogic: The loadingOverlay element was not found, cannot proceed.");
+        return;
+    }
+
+    // --- Original Logic (Now only runs if inputs AND overlay were found) ---
+    if (navigator.geolocation) {
+        loadingOverlay.style.display = 'block';
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                // Safe to use these now because the check above passed
+                latInput.value = lat;
+                lngInput.value = lng;
+                console.log("Geolocation success. Lat:", lat, "Lng:", lng);
+
+                fetch(`/geocode?lat=${lat}&lng=${lng}`)
+                    .then(response => response.ok ? response.json() : response.text().then(text => Promise.reject(new Error(`Reverse geocode HTTP error! Status: ${response.status}. Response: ${text}`))))
+                    .then(data => {
+                        if (data.status === "OK" && data.state && data.pincode) {
+                            // Safe to use these now
+                            if (showAlerts || !stateInput.value) { stateInput.value = data.state; }
+                            if (showAlerts || !pincodeInput.value) { pincodeInput.value = data.pincode; }
+                            console.log("Reverse geocode success. State:", data.state, "Pincode:", data.pincode);
+                        } else {
+                            console.error("Reverse geocoding failed or missing data:", data);
+                            if (showAlerts) {
+                                // Safe to use these now
+                                stateInput.value = '';
+                                pincodeInput.value = '';
+                                alert("Could not determine State/Pincode from location.");
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Reverse geocoding fetch/processing error:", error);
+                        if (showAlerts) {
+                            // Safe to use these now
+                            stateInput.value = '';
+                            pincodeInput.value = '';
+                            alert(`Error determining State/Pincode: ${error.message}.`);
+                        }
+                    })
+                    .finally(() => {
+                        loadingOverlay.style.display = 'none';
+                    });
+            },
+            (error) => {
+                console.error("Error getting geolocation:", error.message, `(Code: ${error.code})`);
+                let msg = "Unable to get location.";
+                if (error.code === 1) { msg = "Location access denied."; }
+                else if (error.code === 2) { msg = "Location information unavailable."; }
+                else if (error.code === 3) { msg = "Location request timed out."; }
+
+                if (showAlerts) {
+                    alert(msg + " Please allow access or enter manually.");
+                } else {
+                    console.warn("Auto-fetch location failed:", msg);
+                }
+
+                // Clear inputs only if showing alerts (and inputs exist because check passed)
+                if (showAlerts) {
+                    latInput.value = '';
+                    lngInput.value = '';
+                    stateInput.value = '';
+                    pincodeInput.value = '';
+                }
+                loadingOverlay.style.display = 'none';
+            },
+            { timeout: 10000, enableHighAccuracy: true }
+        );
+    } else {
+        // Geolocation not supported
+        if (showAlerts) {
+            alert("Geolocation is not supported by this browser.");
+        } else {
+            console.warn("Geolocation not supported by browser.");
+        }
+        loadingOverlay.style.display = 'none'; // Ensure overlay is hidden
+    }
+} // End of handleLocationLogic function
+    /********************************************************
+     *                                                      *
+     *    CATEGORY/SUBCATEGORY RESULT HANDLING FUNCTIONS    *
+     *            (Used by Category Browse)                 *
+     *                                                      *
+     ********************************************************/
+
+    // Function to update the CATEGORY ads grid
+    function updateCategoryAdsGrid(ads) {
+        const adsGrid = document.getElementById('categoryAdsGrid'); const showMoreBtn = document.getElementById('categoryShowMoreBtn'); const resultsContainer = document.getElementById('categoryResultsContainer'); const resultsHeading = document.getElementById('categoryResultsHeading');
+        if (!adsGrid || !showMoreBtn || !resultsContainer || !resultsHeading) { console.warn("One or more category results elements are missing on this page!"); return; } // Warn
+        adsGrid.innerHTML = ''; let subcatDisplay = currentSubcategoryFilter?.subcategory?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Selected Subcategory'; let catDisplay = currentSubcategoryFilter?.category?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Selected Category';
+        if (!ads || ads.length === 0) { adsGrid.innerHTML = '<p style="text-align: center; grid-column: 1 / -1; padding: 20px;">No ads found for this subcategory near you.</p>'; showMoreBtn.style.display = 'none'; resultsHeading.textContent = `No Results for ${subcatDisplay} in ${catDisplay}`; resultsContainer.style.display = 'block'; return; }
+        resultsHeading.textContent = `Showing Ads for ${subcatDisplay} in ${catDisplay}`;
+        ads.forEach(ad => { const adCard = createAdCard(ad); adsGrid.appendChild(adCard); setupCarousel(adCard.querySelector('.carousel')); });
+        resultsContainer.style.display = 'block';
+        showMoreBtn.style.display = (ads.length < CATEGORY_PAGE_SIZE) ? 'none' : 'inline-block'; showMoreBtn.disabled = false; showMoreBtn.textContent = 'Show More';
+    }
+
+    // Function to append ads to the CATEGORY grid
+    function appendCategoryAdsGrid(ads) {
+        const adsGrid = document.getElementById('categoryAdsGrid'); const showMoreBtn = document.getElementById('categoryShowMoreBtn');
+        if (!adsGrid || !showMoreBtn) { console.warn("Category grid or show more button missing for append on this page!"); return; } // Warn
+        if (!ads || ads.length === 0) { showMoreBtn.style.display = 'none'; return; }
+        ads.forEach(ad => { const adCard = createAdCard(ad); adsGrid.appendChild(adCard); setupCarousel(adCard.querySelector('.carousel')); });
+        showMoreBtn.style.display = (ads.length < CATEGORY_PAGE_SIZE) ? 'none' : 'inline-block'; showMoreBtn.disabled = false; showMoreBtn.textContent = 'Show More';
+    }
+
+    // Function to fetch ads for a specific subcategory via /fetch-by-subcategory
+    function fetchCategoryAds(category, subcategory, lat, lng, page) {
+        const showMoreBtn = document.getElementById('categoryShowMoreBtn'); const adsGrid = document.getElementById('categoryAdsGrid'); const loadingOverlay = document.getElementById('loadingOverlay'); const resultsContainer = document.getElementById('categoryResultsContainer'); const resultsHeading = document.getElementById('categoryResultsHeading');
+        if (!showMoreBtn || !adsGrid || !loadingOverlay || !resultsContainer || !resultsHeading) { console.warn("Missing required elements for fetchCategoryAds on this page"); return; } // Warn
+        if (!category || !subcategory) { console.error("Category or Subcategory missing for fetch."); resultsContainer.style.display = 'none'; return; }
+        if (!lat || !lng) { alert("Location (latitude/longitude) is required to search by subcategory.\nPlease allow location access or use the location icon."); resultsContainer.style.display = 'none'; return; }
+        console.log(`Fetching page ${page} for Cat: ${category}, Sub: ${subcategory}, Loc: ${lat},${lng}`);
+        loadingOverlay.style.display = 'block';
+        if (page === 1) { adsGrid.innerHTML = '<p style="text-align: center; grid-column: 1 / -1; padding: 20px;">Loading ads...</p>'; resultsHeading.textContent = 'Loading...'; resultsContainer.style.display = 'block'; showMoreBtn.style.display = 'none'; } else { showMoreBtn.textContent = 'Loading...'; showMoreBtn.disabled = true; }
+        const fetchUrl = `/fetch-by-subcategory?category=${encodeURIComponent(category)}&subcategory=${encodeURIComponent(subcategory)}&lat=${lat}&lng=${lng}&page=${page}`;
+        fetch(fetchUrl, { method: 'GET' })
+            .then(response => { if (!response.ok) { return response.text().then(text => { throw new Error(`Failed: ${response.statusText} (${response.status}). ${text || ''}`); }); } return response.json(); })
+            .then(newAds => { if (page === 1) { updateCategoryAdsGrid(newAds); } else { appendCategoryAdsGrid(newAds); } })
+            .catch(error => { console.error('Error fetching subcategory ads:', error); adsGrid.innerHTML = `<p style="text-align: center; color: red; grid-column: 1 / -1; padding: 20px;">Failed to load ads. ${error.message}</p>`; showMoreBtn.style.display = 'none'; resultsHeading.textContent = "Error Loading Ads"; resultsContainer.style.display = 'block'; })
+            .finally(() => { if (showMoreBtn.style.display !== 'none') { showMoreBtn.textContent = 'Show More'; showMoreBtn.disabled = false; } loadingOverlay.style.display = 'none'; if (page === 1 && adsGrid.querySelector('.ad-card')) { resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' }); } });
+    }
+
+
+    /********************************************************
+     *                                                      *
+     *           PAGE-SPECIFIC INITIALIZATION               *
+     *      (Chat, Image Swap - only on Ad Detail)          *
+     *                                                      *
+     ********************************************************/
+
+        // --- Ad Detail Page Specific Logic ---
+        function initializeAdDetail() {
+        const adDetailContainer = document.querySelector('.ad-detail-container');
+        if (!adDetailContainer) return; // Only run if we are on ad_detail page
+
+        console.log("Initializing Ad Detail page specific features...");
+
+        // --- Image Gallery Logic (No changes needed here) ---
+        const mainImage = document.getElementById('mainImage');
+        const thumbnails = document.querySelectorAll('.thumbnail');
+        if (mainImage && thumbnails.length > 0) {
+            console.log("Setting up image gallery...");
+            let currentMainImageSrc = mainImage.src.split('?')[0];
+            thumbnails.forEach(thumb => {
+                const thumbBaseSrc = thumb.dataset.src;
+                thumb.src = `${thumbBaseSrc}?t=${Date.now()}`; // Cache bust
+                thumb.addEventListener('click', function() {
+                    const newSrcBase = this.dataset.src;
+                    if (currentMainImageSrc === newSrcBase) return;
+                    mainImage.style.transition = 'opacity 0.3s ease-in-out'; mainImage.style.opacity = 0.5;
+                    const newTimestampedSrc = `${newSrcBase}?t=${Date.now()}`; mainImage.src = newTimestampedSrc; currentMainImageSrc = newSrcBase;
+                    thumbnails.forEach(t => t.classList.remove('active')); this.classList.add('active');
+                    mainImage.onload = () => { mainImage.style.opacity = 1; }; mainImage.onerror = () => { mainImage.style.opacity = 1; console.error("Failed to load image:", newTimestampedSrc); };
+                    setTimeout(() => { mainImage.style.opacity = 1; }, 400);
+                });
+            });
+        } else {
+            console.warn("Image gallery elements (#mainImage, .thumbnail) not found for ad detail.");
+        }
+
+        // --- Chat Logic ---
+        const sellerIDStr = adDetailContainer?.dataset?.sellerId;
+        const adIDStr = adDetailContainer?.dataset?.adId;
+        const sellerID = parseInt(sellerIDStr, 10);
+        const adID = parseInt(adIDStr, 10);
+        var socket = null;
+        var canChat = true;
+        const chatButtonElement = document.getElementById('chatButton');
+        const chatBoxElement = document.getElementById('chatBox');
+        const messageInputElement = document.getElementById('messageInput');
+        const messagesDivElement = document.getElementById('messages');
+        const sellerStatusElement = document.getElementById('sellerStatus');
+
+
+        // --- Define Helper Functions (Local Scope) ---
+        // These are only called by other JS within this block
+        function openChat() {
+            if (!canChat || !chatBoxElement) return;
+            chatBoxElement.style.display = "block";
+            if (!socket || socket.readyState === WebSocket.CLOSED) {
+                const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://"; const wsURL = wsProtocol + window.location.host + "/ws"; console.log("Connecting to WebSocket:", wsURL);
+                try { socket = new WebSocket(wsURL); } catch (e) { console.error("WebSocket connection error:", e); alert("Could not establish chat connection."); chatBoxElement.style.display = "none"; return; }
+                socket.onopen = function() { console.log("WebSocket connected"); /* fetchConversationHistory(); */ };
+                socket.onmessage = function(event) {
+                    console.log("WebSocket message received:", event.data);
+                    try {
+                        var data = JSON.parse(event.data);
+                        if (data.type === "notification") { console.log("Notification:", data.message); return; }
+                        if (data.ad_id === adID && messagesDivElement) {
+                            var msgElem = document.createElement("div"); msgElem.style.marginBottom = '8px'; msgElem.style.padding = '6px 10px'; msgElem.style.borderRadius = '8px'; msgElem.style.maxWidth = '85%'; msgElem.style.wordWrap = 'break-word'; msgElem.style.clear = 'both'; msgElem.style.fontSize = '0.9rem';
+                            const messageTime = new Date(data.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                            if (data.sender_id === sellerID) { msgElem.textContent = data.message; msgElem.style.background = '#e4e6eb'; msgElem.style.color = '#050505'; msgElem.style.float = 'left'; msgElem.setAttribute('title', `Seller - ${messageTime}`); }
+                            else { msgElem.textContent = data.message; msgElem.style.background = '#1DBFC1'; msgElem.style.color = 'white'; msgElem.style.float = 'right'; msgElem.setAttribute('title', `You - ${messageTime}`); }
+                            messagesDivElement.appendChild(msgElem); messagesDivElement.scrollTop = messagesDivElement.scrollHeight;
+                        } else { console.log("Received message for different ad or messagesDiv missing:", data.ad_id); }
+                    } catch (e) { console.error("Failed to parse WebSocket message:", e, event.data); }
+                };
+                socket.onerror = function(error) { console.error("WebSocket Error:", error); };
+                socket.onclose = function(event) { console.log("WebSocket closed:", event.code, event.reason); socket = null; };
+            } else if (socket.readyState === WebSocket.CONNECTING) { console.log("WebSocket is still connecting..."); }
+            else if (socket.readyState === WebSocket.OPEN) { console.log("WebSocket already open."); /* fetchConversationHistory(); */ }
+        };
+
+        function sendTyping() {
+            /* console.log("Typing..."); */
+        };
+
+        function fetchUserStatus(userIdToFetch) {
+             if (!sellerStatusElement) return; // Check if status element exists
+             fetch("/user-status?user_id=" + userIdToFetch)
+                .then(response => { if (!response.ok) { throw new Error(`HTTP error! Status: ${response.status}`); } return response.json(); })
+                .then(data => { sellerStatusElement.textContent = data.online ? "Seller Online" : "Seller Offline"; sellerStatusElement.style.color = data.online ? '#ffffff' : '#dcedff'; })
+                .catch(err => console.error("Error fetching seller status:", err));
+        };
+
+
+        // --- Check IDs and Assign Global Functions ---
+        if (isNaN(sellerID) || isNaN(adID)) {
+            console.error("Error: Could not read valid sellerID or adID from data attributes for chat.", { sellerStr: sellerIDStr, adStr: adIDStr });
+            canChat = false;
+            if (chatButtonElement) {
+                chatButtonElement.disabled = true; chatButtonElement.style.opacity = 0.6; chatButtonElement.style.cursor = 'not-allowed';
+                const icon = chatButtonElement.querySelector('i'); chatButtonElement.textContent = ' Chat Unavailable'; if (icon) chatButtonElement.prepend(icon);
+            }
+        } else {
+             console.log("Chat IDs loaded:", { adID, sellerID });
+
+             // Assign functions called by HTML onclick to the global window object
+             window.toggleChat = function() {
+                 if (!canChat || !chatBoxElement) return;
+                 if (chatBoxElement.style.display === "none" || chatBoxElement.style.display === "") {
+                     openChat(); // Call the local helper function
+                 } else {
+                     chatBoxElement.style.display = "none";
+                 }
+             };
+
+             window.sendMessage = function() {
+                 if (!canChat || !messageInputElement) return;
+                 var message = messageInputElement.value.trim();
+                 if (!message) return;
+                 var msgObj = { ad_id: adID, receiver_id: sellerID, message: message };
+
+                 if (socket && socket.readyState === WebSocket.OPEN) {
+                     try {
+                         socket.send(JSON.stringify(msgObj));
+                         console.log("Message sent:", msgObj);
+                         messageInputElement.value = ""; // Clear input
+                         messageInputElement.focus(); // Keep focus on input
+                     } catch (e) {
+                         console.error("Error sending message:", e);
+                         alert("Failed to send message. Connection might be closed.");
+                     }
+                 } else {
+                     console.error("Cannot send message, WebSocket is not connected.");
+                     alert("Chat connection lost. Please refresh or try opening chat again.");
+                     openChat(); // Attempt to reopen connection by calling the local helper
+                 }
+             };
+
+             // Set up event listeners for elements controlled purely by JS
+             if (messageInputElement) {
+                 messageInputElement.oninput = sendTyping; // Calls local helper
+                 messageInputElement.onkeypress = function(event) { if(event.key === 'Enter') window.sendMessage(); }; // Calls global sendMessage
+             }
+
+             // Initial status check and polling (calls local helper)
+             fetchUserStatus(sellerID);
+             setInterval(() => fetchUserStatus(sellerID), 10000);
+        }
+
+    } // End initializeAdDetail
+
+    /********************************************************
+     *                                                      *
+     *         MAIN DOMCONTENTLOADED EVENT LISTENER         *
+     *             (Initialization & Core Logic)            *
+     *                                                      *
+     ********************************************************/
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log("DOM fully loaded and parsed. Initializing common elements...");
+
+      // --- Common Element References & Initial Setup ---
+      const loadingOverlay = document.getElementById('loadingOverlay'); // Already referenced above
+      const filterForm = document.getElementById('filterForm');
+      const locationIcon = document.getElementById('locationIcon');
+      const categoryElement = document.getElementById('category');
+      const subcategoryElement = document.getElementById('subcategory');
+      const showMoreBtn = document.getElementById('showMoreBtn'); // Main "Show More" for index/filters
+      const mainAdsGridElement = document.querySelector('main.container > section.ads-grid'); // Main ads grid (Index page)
+      const categoryGrid = document.getElementById('categoryGrid');
+      const subcategoryContainer = document.getElementById('subcategoryContainer');
+      const categoryShowMoreBtn = document.getElementById('categoryShowMoreBtn'); // Category browse "Show More"
+      const categoryAdsGrid = document.getElementById('categoryAdsGrid'); // Category browse results grid
+      const categoryResultsContainer = document.getElementById('categoryResultsContainer');
+      const browseSectionElement = document.querySelector('.category-browse-section');
+
+            // --- Initialize Choices.js for Search Form Selects (if the search form itself exists) ---
+            const filterFormForChoices = document.getElementById('filterForm'); // Check for the specific form
+      if (filterFormForChoices) {
+          console.log("Search form (#filterForm) found. Attempting Choices init for search dropdowns...");
+          const categoryElementForSearch = filterFormForChoices.querySelector('#category'); // Find *within* the form
+          const subcategoryElementForSearch = filterFormForChoices.querySelector('#subcategory'); // Find *within* the form
+
+          if (categoryElementForSearch && subcategoryElementForSearch) {
+             let searchCategorySelect, searchSubcategorySelect; // Use different variable names to avoid confusion
+             try {
+                searchCategorySelect = new Choices(categoryElementForSearch, { searchEnabled: false, itemSelectText: '', position: 'auto', shouldSort: false });
+                searchSubcategorySelect = new Choices(subcategoryElementForSearch, { searchEnabled: false, itemSelectText: '', position: 'auto', shouldSort: false });
+                console.log("Choices.js initialized for search dropdowns successfully.");
+
+                 // Category change updates Subcategory dropdown (for search bar only)
+                 categoryElementForSearch.addEventListener('change', function() {
+                     const category = this.value;
+                     // Use the specific instance for the search subcategory
+                     searchSubcategorySelect.clearStore();
+                     searchSubcategorySelect.clearInput();
+                     if (category === 'all' || !category) {
+                        searchSubcategorySelect.setChoices([{ value: 'all', label: 'All Subcategories', selected: true, disabled: false }], 'value', 'label', true);
+                         if (!category) { searchSubcategorySelect.disable(); searchSubcategorySelect.setChoices([{ value: '', label: 'Subcategory', selected: true, disabled: true, placeholder: true }], 'value', 'label', true); }
+                         else { searchSubcategorySelect.enable(); }
+                     } else if (subcategories[category]) {
+                        searchSubcategorySelect.enable();
+                         const items = [{ value: '', label: 'Select Subcategory', placeholder: true, disabled: true, selected: false }].concat( subcategories[category].map(sub => ({ value: sub.toLowerCase().replace(/ /g, '_').replace(/&/g, 'and'), label: sub })) );
+                        searchSubcategorySelect.setChoices(items, 'value', 'label', true);
+                        // searchSubcategorySelect.setValue(''); // Removed - may cause issues if base listener fires first
+                     } else {
+                        searchSubcategorySelect.disable();
+                        searchSubcategorySelect.setChoices([{ value: '', label: 'Subcategory', selected: true, disabled: true, placeholder: true }], 'value', 'label', true);
+                     }
+                     console.log("Base.html: Search subcategory updated.");
+                 });
+                 // categoryElementForSearch.dispatchEvent(new Event('change')); // Avoid initial dispatch here too maybe
+
+             } catch (error) { console.error("Base.html: Error initializing Choices.js for search form:", error); }
+          } else {
+              console.log("Base.html: Category/Subcategory elements NOT found within #filterForm.");
+          }
+      } else {
+           console.log("Base.html: Search form (#filterForm) not found on this page. Skipping Choices init for search.");
+      }
+
+      // --- Common Event Listeners (check element existence first) ---
+
+      // Account Dropdown Toggle Logic
+      document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
+          const parentDropdown = toggle.closest('.account-dropdown'); if (!parentDropdown) return;
+          toggle.addEventListener('click', function(event) {
+              event.preventDefault(); event.stopPropagation();
+              const menus = parentDropdown.querySelectorAll('.dropdown-menu');
+              document.querySelectorAll('.account-dropdown .dropdown-menu.show').forEach(openMenu => { if (!parentDropdown.contains(openMenu)) { openMenu.classList.remove('show'); } });
+              menus.forEach(menu => menu.classList.toggle('show'));
+          });
+      });
+      document.addEventListener('click', function(event) { if (!event.target.closest('.account-dropdown')) { document.querySelectorAll('.account-dropdown .dropdown-menu.show').forEach(menu => menu.classList.remove('show')); } });
+
+      // Search Form: Location Icon Click Listener
+      if (locationIcon) {
+          locationIcon.addEventListener('click', function(event) { event.preventDefault(); handleLocationLogic(true); });
+      } else { console.log("Location icon element (#locationIcon) not found."); }
+
+      // Search Form: Submission Handler
+      if (filterForm) {
+          filterForm.addEventListener('submit', function(e) {
+              e.preventDefault(); if (loadingOverlay) loadingOverlay.style.display = 'block';
+              currentFilterParams = null; currentFilterPage = 1;
+              if(categoryResultsContainer) categoryResultsContainer.style.display = 'none'; // Hide category results
+              const formData = new FormData(this); const state = formData.get('state'); const pincode = formData.get('pincode');
+              console.log("Filter submit triggered. Data:", Object.fromEntries(formData));
+              let geocodePromise = (state && pincode) ? fetchAndUpdateLatLng(state, pincode) : Promise.resolve({ lat: "", lng: "" });
+              geocodePromise.then(() => {
+                  const searchParams = new URLSearchParams(new FormData(filterForm)); searchParams.set('page', '1'); currentFilterParams = new URLSearchParams(searchParams); currentFilterParams.delete('page'); console.log("Filter API call params:", searchParams.toString());
+                  if(mainAdsGridElement) mainAdsGridElement.innerHTML = '<p style="text-align: center; grid-column: 1 / -1;">Searching...</p>'; else console.warn("Main ads grid not found for filter search status"); // Warn if grid missing
+                  if (showMoreBtn) showMoreBtn.style.display = 'none';
+                  return fetch('/filter-ads', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: searchParams.toString() });
+              })
+              .then(response => { if (!response.ok) { return response.text().then(text => { throw new Error(`Filter response error: ${response.statusText} (${response.status}). ${text}`); }); } return response.json(); })
+              .then(filteredAdsPage1 => { console.log("Received filtered ads:", filteredAdsPage1); updateAdsGrid(filteredAdsPage1); }) // Updates MAIN grid (will warn if missing)
+              .catch(error => { console.error('Filter process error:', error); if(mainAdsGridElement) mainAdsGridElement.innerHTML = `<p style="text-align: center; color: red; grid-column: 1 / -1;">Failed to load ads. ${error.message}</p>`; if (showMoreBtn) showMoreBtn.style.display = 'none'; currentFilterParams = null; })
+              .finally(() => { if (loadingOverlay) loadingOverlay.style.display = 'none'; });
+          });
+      } else { console.log("Filter form element (#filterForm) not found."); }
+
+      // --- Initial Page Setup ---
+      // Setup carousels potentially existing on the page (index or category results)
+      document.querySelectorAll('.carousel').forEach(setupCarousel);
+      console.log("Initial carousels setup check done.");
+
+      // Auto-fetch location on page load (useful for categories/search)
+      console.log("Attempting auto-fetch location on page load...");
+      handleLocationLogic(false);
+
+      // --- Main Pagination ("Show More" for Latest Posts / Filtered Results - Primarily for Index) ---
+      if (showMoreBtn && mainAdsGridElement) {
+          const initialAdCount = mainAdsGridElement.querySelectorAll('.ad-card').length;
+          showMoreBtn.style.display = (initialAdCount === 0 || initialAdCount < PAGE_SIZE) ? 'none' : 'block';
+          showMoreBtn.addEventListener('click', function() {
+              this.textContent = 'Loading...'; this.disabled = true; let fetchUrl, fetchOptions;
+              if (currentFilterParams) { // Fetching more FILTERED results
+                  currentFilterPage++; const paramsForFetch = new URLSearchParams(currentFilterParams); paramsForFetch.append('page', currentFilterPage.toString()); fetchUrl = '/filter-ads'; fetchOptions = { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: paramsForFetch.toString() }; console.log(`Fetching FILTERED page ${currentFilterPage}`);
+              } else { // Fetching more INITIAL results (Index page default)
+                  initialLoadPage++; fetchUrl = `/fetch-ads?page=${initialLoadPage}`; fetchOptions = { method: 'GET' }; console.log(`Fetching INITIAL page ${initialLoadPage}`);
+              }
+              fetch(fetchUrl, fetchOptions)
+                  .then(response => { if (!response.ok) { return response.text().then(text => { throw new Error(`Fetch more ads error: ${response.statusText} (${response.status}). ${text}`); }); } return response.json(); })
+                  .then(newAds => { appendAdsToGrid(newAds); }) // Appends to MAIN grid (will warn if missing)
+                  .catch(error => { console.error('Error fetching more ads:', error); alert(`Could not load more ads: ${error.message}`); this.style.display = 'none'; })
+                  .finally(() => { if (this.style.display !== 'none') { this.textContent = 'Show More'; this.disabled = false; } });
+          });
+      } else { console.log("Main Show More button (#showMoreBtn) or main ads grid not found (expected on non-index pages)."); }
+
+
+      // --- CATEGORY BROWSE INITIALIZATION & LISTENERS (If elements exist) ---
+      if (categoryGrid && subcategoryContainer && browseSectionElement && typeof subcategories === 'object' && subcategories !== null && Object.keys(subcategories).length > 0) {
+          console.log("INFO: Prerequisites met. Initializing Category Browse Section.");
+          // 1. Populate Main Categories
+          try {
+              Object.keys(subcategories).forEach(catKey => {
+                  const catButton = document.createElement('button'); catButton.className = 'category-item'; catButton.textContent = catKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()); catButton.dataset.category = catKey; categoryGrid.appendChild(catButton);
+                  const subList = document.createElement('div'); subList.className = 'subcategory-list'; subList.id = `subcategories-for-${catKey}`; subcategoryContainer.appendChild(subList);
+              });
+              console.log(`INFO: Successfully added ${Object.keys(subcategories).length} category buttons.`);
+
+              // 2. Category Click Listener
+              categoryGrid.addEventListener('click', function(event) {
+                 if (event.target.classList.contains('category-item')) {
+                    const selectedCategoryButton = event.target; const categoryKey = selectedCategoryButton.dataset.category; console.log(`Category clicked: ${categoryKey}`);
+                    categoryGrid.querySelectorAll('.category-item.active').forEach(b => b.classList.remove('active')); selectedCategoryButton.classList.add('active');
+                    subcategoryContainer.querySelectorAll('.subcategory-list').forEach(l => { l.classList.remove('show'); l.innerHTML = ''; });
+                    if (categoryAdsGrid) categoryAdsGrid.innerHTML = ''; else console.warn("Category ads grid missing for clearing"); // Warn
+                    if (categoryShowMoreBtn) categoryShowMoreBtn.style.display = 'none'; else console.warn("Category show more missing for hiding"); // Warn
+                    if (categoryResultsContainer) categoryResultsContainer.style.display = 'none'; else console.warn("Category results container missing for hiding"); // Warn
+                    currentSubcategoryFilter = null; categoryCurrentPage = 1;
+                    const targetSubList = document.getElementById(`subcategories-for-${categoryKey}`);
+                    if (targetSubList && subcategories[categoryKey] && Array.isArray(subcategories[categoryKey])) {
+                        subcategories[categoryKey].forEach(subName => { const subButton = document.createElement('button'); subButton.className = 'subcategory-item'; subButton.textContent = subName; subButton.dataset.subcategory = subName.toLowerCase().replace(/ /g, '_').replace(/&/g, 'and'); subButton.dataset.parentCategory = categoryKey; targetSubList.appendChild(subButton); });
+                        targetSubList.classList.add('show');
+                    } else { console.warn(`No subcategories or target list for: ${categoryKey}`); if (targetSubList) { targetSubList.innerHTML = '<p style="color: #777; font-style: italic; width: 100%; text-align: center;">No subcategories available.</p>'; targetSubList.classList.add('show'); } }
+                 }
+              });
+
+              // 3. Subcategory Click Listener
+              subcategoryContainer.addEventListener('click', function(event) {
+                  if (event.target.classList.contains('subcategory-item')) {
+                      const subcatButton = event.target; const subcategoryKey = subcatButton.dataset.subcategory; const parentCategoryKey = subcatButton.dataset.parentCategory; console.log(`Subcategory clicked: ${subcategoryKey} under ${parentCategoryKey}`);
+                      const lat = document.getElementById('latInput')?.value; const lng = document.getElementById('lngInput')?.value; // Safely get lat/lng
+                      if (!lat || !lng) { alert("Location required. Please allow location access or use the icon."); return; }
+                      categoryCurrentPage = 1; currentSubcategoryFilter = { category: parentCategoryKey, subcategory: subcategoryKey };
+                      fetchCategoryAds(parentCategoryKey, subcategoryKey, lat, lng, 1); // Fetch page 1 (will warn if elements missing)
+                  }
+              });
+
+          } catch (error) { console.error("ERROR: Failed during category button population:", error); browseSectionElement.style.display = 'none'; console.warn("WARN: Hiding browse section due to population error."); }
+      } else { console.log("Category browse section prerequisites not met or elements not found on this page."); if(browseSectionElement) browseSectionElement.style.display = 'none'; }
+
+       // 4. Category Results "Show More" Button Listener (If button exists)
+       if (categoryShowMoreBtn) {
+           categoryShowMoreBtn.addEventListener('click', function() {
+               if (!currentSubcategoryFilter) { console.error("Cannot show more: No subcategory filter active."); return; }
+               categoryCurrentPage++; console.log(`Loading category page: ${categoryCurrentPage}`);
+               const lat = document.getElementById('latInput')?.value; const lng = document.getElementById('lngInput')?.value;
+               if (!lat || !lng) { alert("Location missing. Cannot load more."); this.style.display = 'none'; return; }
+               fetchCategoryAds(currentSubcategoryFilter.category, currentSubcategoryFilter.subcategory, lat, lng, categoryCurrentPage); // Will warn if elements missing
+           });
+       } else { console.log("INFO: Category Show More button (#categoryShowMoreBtn) not found (expected if no results yet or not on index page)."); }
+
+
+       // --- Initialize Page-Specific Features ---
+       initializeAdDetail(); // This function will check internally if it's on the right page
+
+
+    }); // End DOMContentLoaded
+    </script>
+
+    <!-- Placeholder for extra page-specific scripts -->
+    {{ block "scripts_extra" . }}{{ end }}
+
+</body>
+</html>

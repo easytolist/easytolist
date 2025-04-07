@@ -1,0 +1,34 @@
+{{define "header"}}
+
+<header>
+    <div class="logo-container">
+      <a href="/">
+        <img src="/static/logo.png" alt="EasyToList Logo" class="logo">
+        <span class="company-name">easytolist</span>
+      </a>
+    </div>
+    <nav class="home-links">
+      <a href="/">Home</a>
+      <a href="/about-us">About Us</a>
+      <a href="/career">Career</a>
+    </nav>
+    <nav class="main-links">
+      {{ if .IsLoggedIn }}
+        <!-- Logged In View -->
+        <a href="/post-ad" class="post-ad-btn">Post Ad</a>
+        <div class="account-dropdown">
+          <a href="/account"> <img src="/static/accounticon.png" alt="Account" class="user-icon"> </a>
+        </div>
+      {{ else }}
+        <!-- Logged Out View -->
+        <a href="/post-ad" class="post-ad-btn">Post Ad</a>
+        <div class="account-dropdown">
+          <a href="#" class="dropdown-toggle"> <img src="/static/accounticon.png" alt="Menu" class="user-icon"> </a>
+          <div class="dropdown-menu desktop-dropdown"> <a href="/login">Login</a> <a href="/signup">Sign Up</a> </div>
+          <div class="dropdown-menu mobile-dropdown"> <a href="/login">Login</a> <a href="/signup">Sign Up</a> <a href="/">Home</a> <a href="/about-us">About Us</a> <a href="/career">Career</a> </div>
+        </div>
+      {{ end }}
+    </nav>
+</header>
+{{end}}
+
