@@ -2035,7 +2035,6 @@ func isLoggedIn(r *http.Request) bool {
 }
 
 func main() {
-	// .env file for forgot password email and app password
 	// Load .env file, but don't make it fatal if it's not found,
 	// as environment variables will be set directly in Render.
 	err := godotenv.Load()
@@ -2045,22 +2044,26 @@ func main() {
 	}
 
 	// DB is initialized in db.go (which uses environment variables now)
-	// Assuming DB is a global variable initialized in db.go
+	// Assuming DB is a global variable initialized in db.go init()
 	if DB == nil {
+		// This check might be redundant if init() guarantees DB is set or panics,
+		// but it's safer to leave it for now.
 		log.Fatal("Database connection (DB) is nil. Check db.go initialization.")
 		return
 	}
-	defer DB.Close() // Ensure DB connection is closed when main exits
+	// defer DB.Close() should only be called once for the global DB connection
+	defer DB.Close()
 
+	// Setup Chi router
 	router := chi.NewRouter()
 	router.Use(middleware.Logger) // Use Chi's logger middleware
 
 	// Serve static files and uploads
-	// Ensure the paths "uploads" and "static" are correct relative to where your executable will run
+	// Ensure the paths "uploads" and "static" are correct relative to the executable
 	router.Handle("/uploads/*", http.StripPrefix("/uploads/", http.FileServer(http.Dir("uploads"))))
 	router.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
-	// --- Your existing route definitions ---
+	// --- Route definitions ---
 	router.Get("/", homeHandler)
 	router.Get("/ad/{adID}", adDetailHandler)
 	router.Get("/signup", signupHandler)
@@ -2073,38 +2076,33 @@ func main() {
 	router.Get("/account", accountHandler)
 	router.Post("/edit-ad", editAdHandler)
 	router.Post("/delete-ad", deleteAdHandler)
-	router.Get("/fetch-ads", fetchAdsHandler) // Assuming you still need this pagination endpoint
+	router.Get("/fetch-ads", fetchAdsHandler)
 	router.Get("/forward-geocode", forwardGeocodeHandler)
 	router.Post("/filter-ads", filterAdsHandler)
 	router.Get("/fetch-by-subcategory", fetchBySubcategoryHandler)
 	router.Get("/verify/{token}", verificationHandler)
-
-	// Chat endpoints.
 	router.Get("/ws", chatWebSocketHandler)
 	router.Post("/send-message", sendMessageHandler)
 	router.Get("/get-conversation", getConversationHandler)
 	router.Get("/user-status", userStatusHandler)
-	router.Get("/account/messages", messagesHandler) // Route for messages page
+	router.Get("/account/messages", messagesHandler)
 	router.Get("/geocode", geocodeHandler)
+	router.Get("/password/reset", forgotPasswordPage)
+	router.Get("/reset-password", resetPasswordPage)
+	router.Post("/api/forgot-password", forgotPasswordHandler)
+	router.Post("/api/reset-password", resetPasswordHandler)
+	// --- End of Route definitions ---
 
-	// Forgot password on login page routers.
-	router.Get("/password/reset", forgotPasswordPage)          // Forgot password page
-	router.Get("/reset-password", resetPasswordPage)           // Reset password page
-	router.Post("/api/forgot-password", forgotPasswordHandler) // API endpoint
-	router.Post("/api/reset-password", resetPasswordHandler)   // API endpoint
-	// --- End of your existing route definitions ---
-
-	// === Port Configuration for Render ===
-	port := os.Getenv("PORT") // Get port from environment variable provided by Render
+	// === Port Configuration ===
+	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080" // Default to 8080 if PORT is not set (for local development)
+		port = "8080" // Default for local development
 		log.Printf("Defaulting to port %s for local development", port)
 	}
 	serverAddress := ":" + port
-	// =====================================
-
-	fmt.Printf("🚀 Server starting on %s\n", serverAddress) // Use the determined server address
+	// ==========================
 
 	// Start the server
-	log.Fatal(http.ListenAndServe(serverAddress, router)) // Listen on the dynamic or default port
+	fmt.Printf("🚀 Server starting on %s\n", serverAddress)
+	log.Fatal(http.ListenAndServe(serverAddress, router))
 }
