@@ -596,107 +596,267 @@ ORDER BY m.created_at ASC`
 	renderTemplate(w, "account", data)
 }
 
-// editAdHandler
+// editAdHandler processes the ad edit form submission.
 func editAdHandler(w http.ResponseWriter, r *http.Request) {
-	// 1.
-	session, _ := store.Get(r, "session")
+	// 1. Authentication: Get user ID from session
+	session, _ := store.Get(r, "session") // Replace 'store' with your actual session store variable
 	userID, ok := session.Values["userID"].(int)
 	if !ok || userID <= 0 {
+		log.Println("WARN: editAdHandler - Unauthorized access attempt.")
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	// 2.
-	err := r.ParseMultipartForm(10 << 20) // 10 MB max
+	// 2. Parse Form: Handle multipart form data including files
+	// Increased max memory slightly just in case, adjust as needed
+	err := r.ParseMultipartForm(20 << 20) // 20 MB max memory
 	if err != nil {
-		http.Error(w, "File upload too large", http.StatusBadRequest)
+		log.Printf("ERROR: editAdHandler - Failed to parse multipart form: %v", err)
+		// Check if the error is because the request body is too large
+		if err.Error() == "http: request body too large" {
+			http.Error(w, "File upload is too large. Maximum size allowed is 20MB.", http.StatusBadRequest)
+		} else {
+			http.Error(w, "Error processing form data.", http.StatusBadRequest)
+		}
 		return
 	}
+	log.Printf("INFO: editAdHandler - User %d - Multipart form parsed.", userID)
 
-	// 3.
-	adID := r.FormValue("ad_id")
+	// 3. Extract Form Values
+	adIDStr := r.FormValue("ad_id")
 	title := r.FormValue("title")
 	description := r.FormValue("description")
-	deletedImages := strings.Split(r.FormValue("deleted_images"), ",")
+	deletedImagesRaw := r.FormValue("deleted_images") // Get raw string first
+	log.Printf("INFO: editAdHandler - User %d - Received adID: %s, title: %s, deletedRaw: '%s'", userID, adIDStr, title, deletedImagesRaw)
 
-	// 4. Ad ID को integer में बदलें
-	adIDInt, err := strconv.Atoi(adID)
+	// Clean up deleted images list: handle empty string, trim spaces
+	var deletedImages []string
+	if deletedImagesRaw != "" {
+		rawSplit := strings.Split(deletedImagesRaw, ",")
+		for _, img := range rawSplit {
+			trimmed := strings.TrimSpace(img)
+			if trimmed != "" {
+				deletedImages = append(deletedImages, trimmed)
+			}
+		}
+	}
+	log.Printf("INFO: editAdHandler - User %d - Parsed deleted images: %v", userID, deletedImages)
+
+	// 4. Validate Ad ID
+	adIDInt, err := strconv.Atoi(adIDStr)
 	if err != nil {
+		log.Printf("WARN: editAdHandler - User %d - Invalid ad ID format: %s", userID, adIDStr)
 		http.Error(w, "Invalid ad ID", http.StatusBadRequest)
 		return
 	}
 
-	// 5. जांचें कि यह Ad इस उपयोगकर्ता का है
-	var adOwner int
-	err = DB.QueryRow("SELECT user_id FROM ads WHERE id = $1", adIDInt).Scan(&adOwner)
-	if err != nil || adOwner != userID {
-		http.Error(w, "Ad not found or unauthorized", http.StatusForbidden)
+	// --- Start Database Transaction ---
+	tx, err := DB.Begin() // Use your actual DB connection variable
+	if err != nil {
+		log.Printf("ERROR: editAdHandler - User %d - Failed to begin transaction: %v", userID, err)
+		http.Error(w, "Database error, please try again later.", http.StatusInternalServerError)
 		return
 	}
+	// Defer rollback in case of errors later in the function
+	// It's safe to call Rollback even if Commit succeeded.
+	defer tx.Rollback()
+	log.Printf("INFO: editAdHandler - User %d - Transaction started for ad ID %d.", userID, adIDInt)
 
-	// 6. Ad डिटेल्स अपडेट करें
-	_, err = DB.Exec(
-		"UPDATE ads SET title = $1, description = $2 WHERE id = $3",
-		title, description, adIDInt,
+	// 5. Verify Ad Ownership (within the transaction)
+	var adOwner int
+	err = tx.QueryRow("SELECT user_id FROM ads WHERE id = $1 FOR UPDATE", adIDInt).Scan(&adOwner) // Add FOR UPDATE for locking within transaction
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("WARN: editAdHandler - User %d - Ad not found: %d", userID, adIDInt)
+			http.Error(w, "Ad not found", http.StatusNotFound)
+		} else {
+			log.Printf("ERROR: editAdHandler - User %d - Error checking ad ownership for ad %d: %v", userID, adIDInt, err)
+			http.Error(w, "Database error", http.StatusInternalServerError)
+		}
+		return // Rollback will be deferred
+	}
+	if adOwner != userID {
+		log.Printf("WARN: editAdHandler - User %d - Unauthorized attempt to edit ad %d owned by user %d", userID, adIDInt, adOwner)
+		http.Error(w, "Unauthorized to edit this ad", http.StatusForbidden)
+		return // Rollback will be deferred
+	}
+	log.Printf("INFO: editAdHandler - User %d - Verified ownership for ad ID %d.", userID, adIDInt)
+
+	// 6. Update Ad Text Details (within the transaction)
+	_, err = tx.Exec(
+		"UPDATE ads SET title = $1, description = $2 WHERE id = $3 AND user_id = $4", // Added user_id check again for safety
+		title, description, adIDInt, userID,
 	)
 	if err != nil {
-		log.Printf("Ad update error: %v", err)
-		http.Error(w, "Failed to update ad", http.StatusInternalServerError)
+		log.Printf("ERROR: editAdHandler - User %d - Failed to update ad text for ad %d: %v", userID, adIDInt, err)
+		http.Error(w, "Failed to update ad details", http.StatusInternalServerError)
+		return // Rollback will be deferred
+	}
+	log.Printf("INFO: editAdHandler - User %d - Updated text details for ad ID %d.", userID, adIDInt)
+
+	// 7. Delete Specified Images (within the transaction)
+	if len(deletedImages) > 0 {
+		stmtDel, err := tx.Prepare("DELETE FROM ad_images WHERE ad_id = $1 AND image_path = $2")
+		if err != nil {
+			log.Printf("ERROR: editAdHandler - User %d - Failed to prepare delete statement for ad %d: %v", userID, adIDInt, err)
+			http.Error(w, "Database error during image deletion preparation", http.StatusInternalServerError)
+			return // Rollback will be deferred
+		}
+		defer stmtDel.Close()
+
+		for _, imgToDelete := range deletedImages {
+			log.Printf("INFO: editAdHandler - User %d - Attempting to delete image record: %s for ad %d", userID, imgToDelete, adIDInt)
+			res, err := stmtDel.Exec(adIDInt, imgToDelete)
+			if err != nil {
+				// Log error but continue, maybe the image was already deleted or never existed for this ad
+				log.Printf("WARN: editAdHandler - User %d - Failed to execute delete statement for image %s, ad %d: %v", userID, imgToDelete, adIDInt, err)
+				continue // Try deleting next image
+			}
+
+			rowsAffected, _ := res.RowsAffected()
+			if rowsAffected > 0 {
+				log.Printf("INFO: editAdHandler - User %d - Deleted image record: %s for ad %d", userID, imgToDelete, adIDInt)
+				// Now attempt to delete from filesystem ONLY if DB record was deleted
+				filePathToDelete := filepath.Join("uploads", imgToDelete)
+				err := os.Remove(filePathToDelete)
+				if err != nil && !os.IsNotExist(err) {
+					// Log error if deletion failed and the file wasn't already gone
+					log.Printf("ERROR: editAdHandler - User %d - Failed to delete image file %s from filesystem: %v", userID, filePathToDelete, err)
+					// Continue might be acceptable, but log it. Don't rollback the whole transaction for a file system error.
+				} else {
+					log.Printf("INFO: editAdHandler - User %d - Deleted image file: %s from filesystem", userID, filePathToDelete)
+				}
+			} else {
+				log.Printf("INFO: editAdHandler - User %d - Image record %s for ad %d not found for deletion in DB (might have been deleted already).", userID, imgToDelete, adIDInt)
+			}
+		}
+	}
+
+	// 8. Upload and Save New Images (within the transaction)
+	files := r.MultipartForm.File["images"] // Get slice of file headers
+	log.Printf("INFO: editAdHandler - User %d - Received %d new files for upload for ad %d.", userID, len(files), adIDInt)
+
+	// Prepare insert statement once before the loop
+	stmtIns, err := tx.Prepare("INSERT INTO ad_images (ad_id, image_path) VALUES ($1, $2)")
+	if err != nil {
+		log.Printf("ERROR: editAdHandler - User %d - Failed to prepare insert statement for ad %d: %v", userID, adIDInt, err)
+		http.Error(w, "Database error during image insertion preparation", http.StatusInternalServerError)
+		return // Rollback will be deferred
+	}
+	defer stmtIns.Close() // Close prepared statement when function exits
+
+	var successfullyUploadedPaths []string // Keep track of files saved in this request
+
+	for _, fileHeader := range files {
+		if fileHeader == nil {
+			continue // Should not happen, but safe check
+		}
+		log.Printf("INFO: editAdHandler - User %d - Processing uploaded file: %s (Size: %d)", userID, fileHeader.Filename, fileHeader.Size)
+
+		// Open the uploaded file content
+		file, err := fileHeader.Open()
+		if err != nil {
+			log.Printf("ERROR: editAdHandler - User %d - Failed to open uploaded file %s: %v", userID, fileHeader.Filename, err)
+			continue // Skip this file, proceed to the next
+		}
+		// --- Explicit Close ---
+		// No defer here, close manually after use or error
+
+		// Generate a safe and unique filename (UUID + original extension)
+		originalFilename := fileHeader.Filename
+		originalExtension := filepath.Ext(originalFilename)
+		uniqueFilename := uuid.New().String() + originalExtension // Safe filename
+		filePath := filepath.Join("uploads", uniqueFilename)
+
+		// Ensure the uploads directory exists
+		// Consider doing this once outside the handler if performance is critical
+		if err := os.MkdirAll("uploads", os.ModePerm); err != nil {
+			log.Printf("ERROR: editAdHandler - User %d - Failed to create uploads directory: %v", userID, err)
+			file.Close() // Close the opened uploaded file
+			http.Error(w, "Server error creating upload directory", http.StatusInternalServerError)
+			// No need to return here if we want to try other files, but likely a fatal server issue
+			// Depending on desired behavior, you might want to return and rollback. Let's continue for now.
+			continue
+		}
+
+		// Create the destination file on the filesystem
+		dst, err := os.Create(filePath)
+		if err != nil {
+			log.Printf("ERROR: editAdHandler - User %d - Failed to create destination file %s: %v", userID, filePath, err)
+			file.Close() // Close the opened uploaded file
+			continue     // Skip this file
+		}
+		// --- Explicit Close ---
+		// No defer here, close manually after use or error
+
+		// Copy the file content
+		_, err = io.Copy(dst, file)
+
+		// --- Close files immediately after copy (or error) ---
+		file.Close()
+		dst.Close() // VERY IMPORTANT TO CLOSE THE DESTINATION FILE HERE
+
+		if err != nil {
+			log.Printf("ERROR: editAdHandler - User %d - Failed to copy uploaded file content to %s: %v", userID, filePath, err)
+			// Attempt to remove the partially created/empty file
+			os.Remove(filePath)
+			continue // Skip this file
+		}
+
+		log.Printf("INFO: editAdHandler - User %d - Successfully saved file to %s", userID, filePath)
+
+		// Insert the image record into the database (using prepared statement)
+		_, err = stmtIns.Exec(adIDInt, uniqueFilename)
+		if err != nil {
+			log.Printf("ERROR: editAdHandler - User %d - Failed to insert image record %s into DB for ad %d: %v", userID, uniqueFilename, adIDInt, err)
+			// CRITICAL: DB insert failed. Remove the file we just saved.
+			os.Remove(filePath)
+			// Stop processing further files? Or just skip this one?
+			// For consistency, let's skip this one and continue, but log prominently.
+			// If this were critical, you might `return` here to trigger the rollback.
+			continue
+		}
+
+		log.Printf("INFO: editAdHandler - User %d - Successfully inserted image record %s into DB for ad %d", userID, uniqueFilename, adIDInt)
+		successfullyUploadedPaths = append(successfullyUploadedPaths, uniqueFilename) // Track success
+	} // End of loop for new files
+
+	// Check if total images exceed limit (optional, depends on your rules)
+	var currentImageCount int
+	err = tx.QueryRow("SELECT COUNT(*) FROM ad_images WHERE ad_id = $1", adIDInt).Scan(currentImageCount)
+	if err != nil {
+		log.Printf("ERROR: editAdHandler - User %d - Failed to count images for ad %d after update: %v", userID, adIDInt, err)
+		// Don't necessarily fail the whole request, but log it.
+	} else {
+		log.Printf("INFO: editAdHandler - User %d - Ad %d now has %d images.", userID, adIDInt, currentImageCount)
+		// Example limit check:
+		// maxImages := 5
+		// if currentImageCount > maxImages {
+		//    log.Printf("WARN: editAdHandler - User %d - Ad %d exceeds image limit (%d > %d). Rolling back.", userID, adIDInt, currentImageCount, maxImages)
+		//    // You might choose to rollback here by returning an error
+		//    http.Error(w, "Image limit exceeded after upload.", http.StatusBadRequest)
+		//    return // Rollback will be deferred
+		// }
+	}
+
+	// 9. Commit Transaction
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("ERROR: editAdHandler - User %d - Failed to commit transaction for ad %d: %v", userID, adIDInt, err)
+		// If commit fails, try to clean up files saved *in this request*
+		for _, uploadedPath := range successfullyUploadedPaths {
+			os.Remove(filepath.Join("uploads", uploadedPath))
+			log.Printf("INFO: editAdHandler - User %d - Cleaned up file %s due to commit failure.", userID, uploadedPath)
+		}
+		http.Error(w, "Failed to save changes due to a database error.", http.StatusInternalServerError)
 		return
 	}
 
-	// 7. डिलीट हुई इमेजेस को हटाएं
-	for _, img := range deletedImages {
-		if img == "" {
-			continue
-		}
-		// डेटाबेस से हटाएं
-		_, err = DB.Exec(
-			"DELETE FROM ad_images WHERE ad_id = $1 AND image_path = $2",
-			adIDInt, img,
-		)
-		if err != nil {
-			log.Printf("Image delete error: %v", err)
-			continue
-		}
-		// फाइल सिस्टम से हटाएं
-		os.Remove(filepath.Join("uploads", img))
-	}
+	log.Printf("INFO: editAdHandler - User %d - Successfully committed transaction for ad %d.", userID, adIDInt)
 
-	// 8. नई इमेजेस अपलोड करें
-	files := r.MultipartForm.File["images"]
-	for _, fileHeader := range files {
-		file, err := fileHeader.Open()
-		if err != nil {
-			continue
-		}
-		defer file.Close()
-
-		// यूनिक फाइलनेम जेनरेट करें
-		uniqueID := uuid.New()
-		filename := fmt.Sprintf("%s-%s", uniqueID.String(), fileHeader.Filename)
-		filePath := filepath.Join("uploads", filename)
-
-		// फाइल सेव करें
-		dst, err := os.Create(filePath)
-		if err != nil {
-			continue
-		}
-		defer dst.Close()
-
-		if _, err := io.Copy(dst, file); err != nil {
-			continue
-		}
-
-		// डेटाबेस में एंट्री बनाएं
-		DB.Exec(
-			"INSERT INTO ad_images (ad_id, image_path) VALUES ($1, $2)",
-			adIDInt, filename,
-		)
-	}
-
-	// 9. सफलता प्रतिक्रिया
-	http.Redirect(w, r, "/account", http.StatusSeeOther)
+	// 10. Success Redirect
+	// Redirect to the account page, perhaps to the manage ads section
+	http.Redirect(w, r, "/account#manage-ads", http.StatusSeeOther)
 }
 
 // deleteAdHandler handles ad deletion.
@@ -896,6 +1056,20 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 		email := r.FormValue("email")
 		password := r.FormValue("password")
 
+		// Prepare data map for potential re-rendering with errors/values
+		data := make(map[string]interface{})
+		data["SubmittedName"] = name   // Pre-fill name on error
+		data["SubmittedEmail"] = email // Pre-fill email on error
+
+		// --- >>> Add Password Length Validation <<< ---
+		if len(password) < 8 {
+			data["ErrorMessage"] = "Password must be at least 8 characters long."
+			w.WriteHeader(http.StatusBadRequest) // 400 Bad Request for invalid input
+			renderTemplate(w, "signup", data)    // Re-render signup page with error
+			return                               // Stop processing
+		}
+		// --- >>> End of Password Length Validation <<< ---
+
 		// Check if email already exists
 		var count int
 		err := DB.QueryRow("SELECT COUNT(*) FROM users WHERE email = $1", email).Scan(&count)
@@ -940,7 +1114,9 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Failed to send verification email: %v", err)
 		}
 
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		// Redirect to login page with a status query parameter
+		redirectURL := "/login?status=verify_pending"
+		http.Redirect(w, r, redirectURL, http.StatusSeeOther)
 		return
 	}
 	renderTemplate(w, "signup", nil)
@@ -1008,8 +1184,10 @@ func verificationHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println("Failed to delete verification token:", err)
 	}
 
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintln(w, "Email verified successfully! You can now login.")
+	// Redirect to the login page with a success status parameter
+	redirectURL := "/login?status=verified"
+	http.Redirect(w, r, redirectURL, http.StatusSeeOther)
+	// Note: No 'return' is needed here as Redirect already handles writing
 }
 
 // loginHandler handles user login.
@@ -1017,6 +1195,11 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		email := r.FormValue("email")
 		password := r.FormValue("password")
+
+		// Prepare data map for rendering, especially if there's an error
+		data := make(map[string]interface{})
+		// Pre-fill email field in case of error, so user doesn't have to retype it
+		data["SubmittedEmail"] = email
 
 		var user struct {
 			ID         int
@@ -1029,31 +1212,71 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 			email,
 		).Scan(&user.ID, &user.Password, &user.IsVerified)
 
+		// Check for user not found or other DB errors
 		if err != nil {
-			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+			// Check specifically for no rows found, treat as invalid credentials
+			if err == sql.ErrNoRows { // Make sure you have "database/sql" imported
+				data["ErrorMessage"] = "Invalid email or password."
+			} else {
+				// Log the actual database error for debugging
+				log.Printf("Database error during login for email %s: %v", email, err)
+				// Show a generic error to the user
+				data["ErrorMessage"] = "An error occurred. Please try again."
+			}
+			// Set appropriate status code before rendering
+			w.WriteHeader(http.StatusUnauthorized)
+			renderTemplate(w, "login", data) // Re-render login page with error
 			return
 		}
 
 		// Check password
 		if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+			data["ErrorMessage"] = "Invalid email or password."
+			w.WriteHeader(http.StatusUnauthorized)
+			renderTemplate(w, "login", data) // Re-render login page with error
 			return
 		}
 
-		// Check email verification
+		// Check email verification <<< --- THE KEY CHANGE IS HERE --- >>>
 		if !user.IsVerified {
-			http.Error(w, "Please verify your email first", http.StatusUnauthorized)
-			return
+			data["ErrorMessage"] = "Please verify your email first." // Specific error message
+			// StatusForbidden (403) is arguably more appropriate than Unauthorized (401) here
+			w.WriteHeader(http.StatusForbidden)
+			renderTemplate(w, "login", data) // Re-render login page with error
+			return                           // Stop processing
 		}
 
+		// --- Login Success ---
 		// Create session
-		session, _ := store.Get(r, "session")
+		session, _ := store.Get(r, "session") // Add error handling for store.Get if needed
 		session.Values["userID"] = user.ID
-		session.Save(r, w)
-		http.Redirect(w, r, "/", http.StatusSeeOther)
+		err = session.Save(r, w) // Add error handling for session.Save
+		if err != nil {
+			log.Printf("Error saving session: %v", err)
+			// Decide how to handle session save error, maybe show an error page/message
+			http.Error(w, "Could not log you in. Please try again.", http.StatusInternalServerError)
+			return
+		}
+		http.Redirect(w, r, "/", http.StatusSeeOther) // Redirect to dashboard/home
 		return
 	}
-	renderTemplate(w, "login", nil)
+
+	// --- Replace the existing GET handling block with this ---
+	// --- GET Request Handling ---
+	data := make(map[string]interface{}) // Prepare data map
+
+	// Check the status query parameter
+	status := r.URL.Query().Get("status")
+	if status == "verify_pending" {
+		// Message after signup, before verification
+		data["InfoMessage"] = "Please verify your email to login."
+	} else if status == "verified" {
+		// Message after successful email verification
+		data["SuccessMessage"] = "Email verified successfully! You can now login."
+	}
+	// Add any other data needed for the template for GET requests here
+
+	renderTemplate(w, "login", data) // Render login page with potential message
 }
 
 // forgot password on login page all handlers.
@@ -1975,6 +2198,93 @@ func forwardGeocodeHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// aboutUsHandler "About Us" page ko render karta hai (using renderTemplate)
+func aboutUsHandler(w http.ResponseWriter, r *http.Request) {
+	data := map[string]interface{}{}
+	// renderTemplate ko call karein, jaisa dusre handlers kar rahe hain
+	renderTemplate(w, "about", data) // Pass "about" as tmplName
+}
+
+// careerHandler renders the "Career" page.
+func careerHandler(w http.ResponseWriter, r *http.Request) {
+	// Data to pass to the template (empty for now)
+	data := map[string]interface{}{}
+
+	// It expects the template name without ".html" and assumes it's in "templates/"
+	renderTemplate(w, "career", data)
+}
+
+// privacyPolicyHandler renders the "Privacy Policy" page.
+func privacyPolicyHandler(w http.ResponseWriter, r *http.Request) {
+	data := map[string]interface{}{}
+	// Use existing renderTemplate, passing the correct template name "privacy_policy"
+	renderTemplate(w, "privacy_policy", data)
+}
+
+// bewareOfFraudsHandler renders the "Beware of Frauds" safety page.
+func bewareOfFraudsHandler(w http.ResponseWriter, r *http.Request) {
+	data := map[string]interface{}{}
+	// Use existing renderTemplate, passing the correct template name "beware_of_frauds"
+	renderTemplate(w, "beware_of_frauds", data)
+}
+
+// submitContactHandler handles submissions from the footer contact form.
+func submitContactHandler(w http.ResponseWriter, r *http.Request) {
+	// 1. Set content type to JSON for the response
+	w.Header().Set("Content-Type", "application/json")
+
+	// 2. Define a struct to hold the incoming JSON data
+	var formData struct {
+		Name    string `json:"name"`
+		Email   string `json:"email"`
+		Message string `json:"message"`
+	}
+
+	// 3. Decode the JSON request body into the struct
+	err := json.NewDecoder(r.Body).Decode(&formData)
+	if err != nil {
+		log.Printf("ERROR: Decoding contact form JSON failed: %v", err)
+		// Send a JSON error response back to the frontend
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"error":   "Invalid data format.",
+		})
+		return // Stop processing
+	}
+
+	// 4. Basic Validation (Server-side)
+	if strings.TrimSpace(formData.Name) == "" || strings.TrimSpace(formData.Email) == "" || strings.TrimSpace(formData.Message) == "" {
+		log.Printf("WARN: Contact form submission missing fields: Name=%s, Email=%s", formData.Name, formData.Email)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"error":   "Please fill in all required fields.",
+		})
+		return // Stop processing
+	}
+	// You could add more robust email validation here if needed
+
+	// 5. Insert data into the database
+	insertQuery := `
+        INSERT INTO contact_messages (name, email, message)
+        VALUES ($1, $2, $3)
+    `
+	_, err = DB.Exec(insertQuery, formData.Name, formData.Email, formData.Message)
+	if err != nil {
+		log.Printf("ERROR: Failed to insert contact message into DB: %v", err)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"error":   "Failed to send message. Please try again later.",
+		})
+		return // Stop processing
+	}
+
+	// 6. Log success and send success response
+	log.Printf("INFO: Contact message received from %s (%s)", formData.Name, formData.Email)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+	})
+}
+
 // adDetailHandler renders the ad detail page.
 func adDetailHandler(w http.ResponseWriter, r *http.Request) {
 	adID := chi.URLParam(r, "adID")
@@ -2089,6 +2399,13 @@ func main() {
 	router.Post("/send-message", sendMessageHandler)
 	router.Get("/get-conversation", getConversationHandler)
 	router.Get("/user-status", userStatusHandler)
+
+	// footer links routers
+	router.Get("/about-us", aboutUsHandler)
+	router.Get("/career", careerHandler)
+	router.Get("/privacy-policy", privacyPolicyHandler)
+	router.Get("/beware-of-frauds", bewareOfFraudsHandler)
+	router.Post("/submit-contact", submitContactHandler)
 
 	// Password reset routes
 	router.Get("/password/reset", forgotPasswordPage)

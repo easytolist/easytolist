@@ -1,0 +1,289 @@
+{{/* templates/about.html */}}
+
+{{define "title"}}About Us - EasyToList{{end}}
+
+{{define "head_extra"}}
+  <style>
+    /* --- General Page Styles --- */
+    .about-page {
+      background-color: #f8f9fa; /* Light background for the page */
+      padding: 40px 0; /* Add vertical padding */
+      overflow-x: hidden; /* Prevent horizontal scroll from animations */
+    }
+
+    .about-container {
+      max-width: 1000px;
+      margin: 0 auto; /* Center the container */
+      padding: 0 20px; /* Horizontal padding for content */
+    }
+
+    /* --- Section Styling --- */
+    .about-section {
+      background-color: #ffffff; /* White background for sections */
+      padding: 40px 30px;
+      margin-bottom: 30px;
+      border-radius: 12px; /* Softer rounded corners */
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); /* Subtle shadow */
+      opacity: 0; /* Start hidden for animation */
+      transform: translateY(20px); /* Start slightly lower for animation */
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    /* Stagger animation for sections */
+    .about-section:nth-child(1) { animation-delay: 0.1s; }
+    .about-section:nth-child(2) { animation-delay: 0.2s; }
+    .about-section:nth-child(3) { animation-delay: 0.3s; }
+    .about-section:nth-child(4) { animation-delay: 0.4s; }
+    .about-section:nth-child(5) { animation-delay: 0.5s; }
+
+
+    /* --- Typography --- */
+    .about-page h1, .about-page h2 {
+      font-family: 'Arial', sans-serif; /* Cleaner font */
+      color: #1DBFC1; /* Theme color */
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+    }
+
+    .about-page h1 {
+      /* Removed font-size and color specific to text */
+      text-align: center;
+      margin-bottom: 0; /* Reset margin as logo has its own */
+    }
+
+     .about-page h2 {
+      font-size: 1.8rem;
+      border-bottom: 2px solid #e0e0e0; /* Subtle separator */
+      padding-bottom: 0.5rem;
+    }
+
+    .about-page p, .about-page ul {
+      font-family: 'Arial', sans-serif;
+      line-height: 1.7;
+      color: #555; /* Slightly darker text for better contrast */
+      font-size: 1.05rem;
+      margin-bottom: 1rem;
+    }
+    .about-page p strong {
+        color: #333;
+        font-weight: 600;
+    }
+
+    .about-page a {
+      color: #1DBFC1;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+    .about-page a:hover {
+      color: #148f91; /* Darker shade on hover */
+      text-decoration: underline;
+    }
+
+    /* --- Hero Section --- */
+    .about-hero {
+      background: linear-gradient(135deg, #1DBFC1 0%, #169597 100%); /* Gradient background */
+      padding: 40px 20px; /* Adjusted padding */
+      text-align: center;
+      margin-bottom: 40px;
+      border-radius: 12px;
+      color: #ffffff;
+      box-shadow: 0 8px 20px rgba(29, 191, 193, 0.3);
+      opacity: 0; /* Animation */
+      transform: translateY(20px); /* Animation */
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+     .about-hero p {
+        color: #e0f7fa; /* Lighter text color for contrast */
+        max-width: 700px;
+        margin: 0 auto;
+        font-size: 1.1rem;
+     }
+
+    /* --- Styles for Hero Logo --- */
+    .about-hero-logo {
+      max-width: 250px; /* Adjust max-width as needed */
+      height: auto;    /* Maintain aspect ratio */
+      display: block;  /* Allows margin auto to work for centering */
+      margin: 0 auto 1rem auto; /* Center horizontally and add bottom margin */
+      filter: brightness(0) invert(1); /* Make the logo white */
+    }
+
+    /* --- "Why Choose Us" List Styling --- */
+    .why-us-list {
+      list-style: none; /* Remove default bullets */
+      padding-left: 0;
+      display: grid; /* Use grid for layout */
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Responsive columns */
+      gap: 20px; /* Space between items */
+    }
+
+    .why-us-item {
+      background-color: #f8f9fa; /* Slightly different background for items */
+      padding: 20px;
+      border-radius: 8px;
+      border-left: 4px solid #1DBFC1; /* Accent border */
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+     .why-us-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+     }
+
+    .why-us-item strong {
+      display: block; /* Make strong element take full width */
+      color: #1DBFC1; /* Theme color for the feature title */
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+     .why-us-item p {
+         font-size: 1rem;
+         margin-bottom: 0;
+         color: #444;
+     }
+
+    /* --- Contact Section --- */
+    .contact-section {
+      text-align: center;
+      background-color: #e9ecef; /* Different background for distinction */
+      border-top: 3px solid #1DBFC1;
+    }
+    .contact-section strong {
+        display: block;
+        margin-bottom: 5px;
+        color: #333;
+        font-weight: 600;
+    }
+
+
+    /* --- Animation --- */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* --- Responsiveness --- */
+    @media (max-width: 768px) {
+      /* .about-page h1 { Removed font-size specific to text } */
+      .about-page h2 {
+        font-size: 1.5rem;
+      }
+      .about-page p, .about-page ul {
+        font-size: 1rem;
+      }
+      .about-section {
+        padding: 30px 20px;
+      }
+       .about-hero {
+        padding: 30px 15px; /* Slightly reduced padding */
+      }
+       .about-hero-logo {
+            max-width: 200px; /* Smaller logo on tablet */
+       }
+    }
+
+     @media (max-width: 480px) {
+        /* .about-page h1 { Removed font-size specific to text } */
+        .about-page h2 {
+            font-size: 1.3rem;
+        }
+         .why-us-list {
+            grid-template-columns: 1fr; /* Stack items on small screens */
+         }
+         .about-section {
+            padding: 25px 15px;
+         }
+          .about-hero-logo {
+            max-width: 180px; /* Even smaller logo on mobile */
+          }
+     }
+
+  </style>
+{{end}}
+
+{{define "content"}}
+  <div class="about-page">
+    <div class="about-container">
+
+      <!-- Hero Section -->
+      <section class="about-hero">
+        <h1>
+            <img src="/static/logo.png" alt="EasyToList Logo" class="about-hero-logo">
+          </h1>
+        <p>
+          Your one-stop classifieds platform created for anyone looking to buy or sell products and services. Designed with simplicity and transparency in mind.
+        </p>
+      </section>
+
+      <!-- Mission Section -->
+      <section class="about-section mission-section">
+        <h2>Our Mission</h2>
+        <p>
+          Our mission is to make buying and selling easy by removing barriers typically associated with online classifieds. We are committed to creating a secure, accessible, and cost-effective platform that empowers people to connect through trusted transactions.
+        </p>
+      </section>
+
+      <!-- Why Choose Us Section -->
+      <section class="about-section why-us-section">
+        <h2>Why Choose EasyToList?</h2>
+        <ul class="why-us-list">
+          <li class="why-us-item">
+            <strong>Classified Ad Website</strong>
+            <p>A dedicated platform for listing ads to help you sell and buy a wide range of products and services.</p>
+          </li>
+          <li class="why-us-item">
+            <strong>Completely Free</strong>
+            <p>Enjoy posting ads without any fees, ever. Truly free classifieds.</p>
+          </li>
+          <li class="why-us-item">
+            <strong>No Subscription & No Hidden Charges</strong>
+            <p>What you see is what you get—no subscription plans or hidden costs.</p>
+          </li>
+          <li class="why-us-item">
+            <strong>Fully Secure</strong>
+            <p>We prioritize your security, ensuring your transactions and personal data remain protected.</p>
+          </li>
+          <li class="why-us-item">
+            <strong>Sell & Buy Anything</strong>
+            <p>From gadgets to furniture, you can list almost any item or service easily.</p>
+          </li>
+          <li class="why-us-item">
+            <strong>Made in India</strong>
+            <p>Proudly built and maintained in India, serving our community with dedication.</p>
+          </li>
+        </ul>
+      </section>
+
+      <!-- Our Promise Section -->
+      <section class="about-section promise-section">
+        <h2>Our Promise</h2>
+        <p>
+          At EasyToList, our promise is to maintain a trusted online space where users can conduct safe and hassle-free transactions. We continuously work to improve our platform to ensure that your experience is outstanding every time you visit.
+        </p>
+        <p>
+          Thank you for choosing EasyToList. Start exploring and experience the ease of buying and selling today!
+        </p>
+      </section>
+
+      <!-- Contact Section -->
+      <section class="about-section contact-section">
+        <h2>Our Location & Contact</h2>
+        <p>
+          <strong>Address:</strong>
+          Gurgaon, India
+        </p>
+        <p>
+          <strong>Contact:</strong>
+          For any inquiries or support, feel free to email us at
+          <a href="mailto:easytolist5@gmail.com">easytolist5@gmail.com</a>.
+        </p>
+      </section>
+
+    </div><!-- End of about-container -->
+  </div><!-- End of about-page -->
+{{end}}

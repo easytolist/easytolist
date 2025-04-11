@@ -1,38 +1,66 @@
+{{/* Use base.html for the overall layout (header/footer included there) */}}
 {{template "base.html" .}}
 
+{{/* Define the page title */}}
 {{define "title"}}Login - EasyToList{{end}}
 
+{{/* Define extra elements for the <head> section */}}
 {{define "head_extra"}}
+    {{/* Link the CSS specific to the login form styling */}}
     <link rel="stylesheet" href="/static/login.css">
 {{end}}
 
+{{/* Define the main content area for the login page */}}
 {{define "content"}}
     <div class="login-container">
         <h2 class="login-heading">Login</h2>
 
-        <!-- Success Message -->
+        {{/* Display success message (e.g., after email verification) */}}
         {{if .SuccessMessage}}
-        <div class="success-message">{{.SuccessMessage}}</div>
+            <p class="login-success-message">{{.SuccessMessage}}</p>
         {{end}}
 
-        <form method="POST" action="/login">
+        {{/* Display info message if it exists (e.g., from signup redirect) */}}
+        {{if .InfoMessage}}
+            <p class="login-info-message">{{.InfoMessage}}</p>
+        {{end}}
 
+        {{/* Display error message (e.g., invalid creds, not verified) */}}
+        {{if .ErrorMessage}}
+            <p class="login-error-message">{{.ErrorMessage}}</p>
+        {{end}}
+
+        {{/* Login Form */}}
+        <form class="login-form" method="POST" action="/login">
+
+            {{/* --- Email Input with IMG Icon --- */}}
             <div class="input-group">
-                <input type="email" name="email" class="login-input" placeholder="Email" required>
+                 {{/* Icon: Email */}}
+                 <img src="/static/email-icon.png" alt="Email Icon" class="input-icon">
+                <input type="email" id="email" name="email" class="login-input" placeholder="Email" required value="{{.SubmittedEmail}}">
             </div>
 
+            {{/* --- Password Input with IMG Icons --- */}}
             <div class="input-group">
-                <input type="password" name="password" class="login-input" placeholder="Password" required>
+                 {{/* Icon: Lock */}}
+                 <img src="/static/lock-icon.png" alt="Password Icon" class="input-icon">
+                 {{/* Note: Added id="loginPassword" for targeting */}}
+                <input type="password" id="loginPassword" name="password" class="login-input" placeholder="Password" required>
+                 {{/* Icon: Password Toggle - Initial state is hidden, so show closed eye */}}
+                 {{/* Note: Added id="loginTogglePasswordIcon" for targeting */}}
+                 <img src="/static/eye-closed.png" alt="Show password" class="toggle-password-icon" id="loginTogglePasswordIcon">
             </div>
 
-            <!-- Forgot Password Link -->
+            {{/* Forgot Password Link */}}
             <p class="forget-password-link">
                 <a href="/password/reset">Forgot Your Password?</a>
             </p>
 
+            {{/* Submit Button */}}
             <button type="submit" class="login-button">Login</button>
         </form>
 
+        {{/* Link to Signup Page */}}
         <p class="signup-link">
             Don't have an account?
             <a href="/signup">Sign up here</a>
@@ -40,6 +68,46 @@
     </div>
 {{end}}
 
+{{/* Define extra scripts (if any) for the end of the body */}}
 {{define "scripts_extra"}}
-    {{/* Add any page-specific scripts for login page here if needed */}}
+    <script>
+        // Wait for the DOM content to load before executing script
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get references to the password input and the toggle icon image on THIS page
+            const passwordInput = document.getElementById('loginPassword'); // Use ID from login page
+            const toggleIcon = document.getElementById('loginTogglePasswordIcon'); // Use ID from login page
+
+            // --- Define the paths to your specific eye icon images ---
+            const eyeOpenIconPath = '/static/eye-open.png';     // Path to the "visible" eye icon
+            const eyeClosedIconPath = '/static/eye-closed.png'; // Path to the "hidden/slashed" eye icon
+
+            // Check if both elements were successfully found
+            if (passwordInput && toggleIcon) {
+                // Add a click event listener to the toggle icon
+                toggleIcon.addEventListener('click', function() {
+                    // Determine the current type of the password input
+                    const isPassword = passwordInput.getAttribute('type') === 'password';
+
+                    // Toggle the input type
+                    passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+
+                    // Toggle the icon image source and alt text based on the *new* state
+                    if (isPassword) {
+                        // If it WAS password, it's now text (visible). Show OPEN eye.
+                        this.src = eyeOpenIconPath;
+                        this.alt = "Hide password";
+                    } else {
+                        // If it WAS text, it's now password (hidden). Show CLOSED eye.
+                        this.src = eyeClosedIconPath;
+                        this.alt = "Show password";
+                    }
+                });
+            } else {
+                // Log an error if elements are not found, helps debugging
+                console.error("Login page: Could not find password input or toggle icon element. Check IDs.");
+                if (!passwordInput) console.error("Element with ID 'loginPassword' not found.");
+                if (!toggleIcon) console.error("Element with ID 'loginTogglePasswordIcon' not found.");
+            }
+        });
+    </script>
 {{end}}

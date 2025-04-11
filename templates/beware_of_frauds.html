@@ -1,0 +1,253 @@
+{{/* templates/beware_of_frauds.html */}}
+
+{{define "title"}}Beware of Frauds - EasyToList{{end}}
+
+{{define "head_extra"}}
+  {{/* Reusing similar styles, adapted for safety page */}}
+  <style>
+    /* --- General Page Styles --- */
+    .safety-page {
+      background-color: #f8f9fa;
+      padding: 40px 0;
+      overflow-x: hidden;
+    }
+
+    .safety-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* --- Section Styling --- */
+    .safety-section {
+      background-color: #ffffff;
+      padding: 30px 30px;
+      margin-bottom: 30px;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+     /* Highlight the critical 'no advance payment' section */
+    .safety-section.critical {
+         border-left: 5px solid #e74c3c; /* Red border for emphasis */
+         background-color: #fff5f5; /* Light red background */
+    }
+     .safety-section.critical h2 {
+        color: #c0392b; /* Darker red heading */
+     }
+
+    /* Stagger animation */
+    .safety-section:nth-child(1) { animation-delay: 0.1s; }
+    .safety-section:nth-child(2) { animation-delay: 0.15s; }
+    .safety-section:nth-child(3) { animation-delay: 0.2s; } /* Critical */
+    .safety-section:nth-child(4) { animation-delay: 0.25s; }
+    .safety-section:nth-child(5) { animation-delay: 0.3s; }
+    .safety-section:nth-child(6) { animation-delay: 0.35s; }
+    .safety-section:nth-child(7) { animation-delay: 0.4s; } /* Report */
+
+
+    /* --- Typography --- */
+    .safety-page h1, .safety-page h2 {
+      font-family: 'Arial', sans-serif;
+      color: #ffffff;
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+    }
+
+    .safety-page h1 {
+      font-size: 2.2rem;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+     .safety-page h2 {
+      font-size: 1.6rem;
+      border-bottom: 2px solid #e0e0e0;
+      padding-bottom: 0.5rem;
+      margin-top: 1rem;
+    }
+     .safety-section:first-of-type h2 {
+        margin-top: 0;
+     }
+
+    .safety-page p, .safety-page ul {
+      font-family: 'Arial', sans-serif;
+      line-height: 1.7;
+      color: #555;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+     .safety-page ul {
+        list-style: disc; /* Default bullet points */
+        margin-left: 20px;
+        padding-left: 15px;
+     }
+      .safety-page ul li {
+        margin-bottom: 0.75rem; /* More space between list items */
+      }
+
+    .safety-page p strong {
+        color: #c0392b; /* Red color for strong emphasis on danger */
+        font-weight: 700;
+    }
+     .safety-page .critical p strong {
+        /* Ensure critical strong text is very visible */
+         font-size: 1.05rem;
+     }
+
+
+    .safety-page a {
+      color: #1DBFC1;
+      text-decoration: none;
+      transition: color 0.3s ease;
+      font-weight: 500;
+    }
+    .safety-page a:hover {
+      color: #148f91;
+      text-decoration: underline;
+    }
+
+        /* --- Hero Section --- */
+        .safety-hero {
+      /* Using a red gradient for alert */
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); /* <<< NEW RED GRADIENT */
+      padding: 50px 20px;
+      text-align: center;
+      margin-bottom: 40px;
+      border-radius: 12px;
+      color: #ffffff; /* Keep text color white */
+      box-shadow: 0 8px 20px rgba(192, 57, 43, 0.3); /* <<< NEW RED SHADOW */
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+     .safety-hero p {
+        color: #f5eaea; /* <<< NEW Lighter text suitable for red background */
+        max-width: 700px;
+        margin: 0 auto;
+        font-size: 1.1rem;
+     }
+
+    /* --- Report Section --- */
+    .report-section {
+      background-color: #f0f9ff; /* Light blue background */
+      text-align: center;
+      border-top: 3px solid #1DBFC1;
+    }
+    .report-section .report-email {
+        font-size: 1.1rem;
+        font-weight: bold;
+        word-break: break-all;
+    }
+
+
+    /* --- Animation --- */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* --- Responsiveness --- */
+    @media (max-width: 768px) {
+      .safety-page h1 { font-size: 1.8rem; }
+      .safety-page h2 { font-size: 1.4rem; }
+      .safety-page p, .safety-page ul { font-size: 0.95rem; }
+      .safety-section { padding: 25px 20px; }
+      .safety-hero { padding: 40px 15px; }
+    }
+
+     @media (max-width: 480px) {
+        .safety-page h1 { font-size: 1.6rem; }
+        .safety-page h2 { font-size: 1.2rem; }
+        .safety-section { padding: 20px 15px; }
+     }
+
+  </style>
+{{end}}
+
+{{define "content"}}
+  <div class="safety-page">
+    <div class="safety-container">
+
+      <!-- Hero Section -->
+      <section class="safety-hero">
+        <h1>Stay Safe on EasyToList</h1>
+        <p>
+          Your safety is important. Follow these tips to avoid common scams and have a secure experience buying and selling online.
+        </p>
+      </section>
+
+      <!-- General Safety -->
+      <section class="safety-section general-tips">
+        <h2>General Safety Tips</h2>
+        <ul>
+            <li><strong>Meet in Person:</strong> Whenever possible, arrange to meet the buyer/seller in a public, well-lit area. Consider bringing a friend along.</li>
+            <li><strong>Inspect Items Thoroughly:</strong> Always check the item carefully for quality and condition *before* you pay or finalize the deal.</li>
+            <li><strong>Trust Your Instincts:</strong> If a deal seems too good to be true, or if the other party behaves suspiciously or pressures you, walk away.</li>
+             <li><strong>Keep Communication On-Platform:</strong> Use the EasyToList chat feature for initial communication. Be cautious if someone immediately insists on moving to WhatsApp or email.</li>
+        </ul>
+      </section>
+
+      <!-- Payment Scams - CRITICAL -->
+      <section class="safety-section critical payment-scams">
+        <h2>Avoiding Payment Scams - VERY IMPORTANT!</h2>
+        <ul>
+            <li><strong>NEVER Pay in Advance:</strong> <strong>Do not send money before receiving and inspecting the item.</strong> This includes requests for deposits, advance payments, 'shipping fees', 'insurance costs', or 'customs charges'. This is the most common way people get scammed.</li>
+            <li><strong>Beware of Overpayment Scams:</strong> Be suspicious if a buyer 'accidentally' sends you more money than the agreed price (often via a fake cheque or payment notification) and asks you to refund the difference. The initial payment will likely bounce later.</li>
+            <li><strong>Avoid Unusual Payment Methods:</strong> Be cautious of requests to pay using wire transfers (like Western Union, MoneyGram), gift cards, or other non-standard, non-traceable methods. Cash on delivery (after inspection) is often safest for local deals.</li>
+             <li><strong>Verify Payment Confirmations:</strong> Do not rely solely on screenshots or emails as proof of payment. Verify directly with your bank or payment provider if unsure.</li>
+        </ul>
+      </section>
+
+       <!-- Protect Information -->
+       <section class="safety-section protect-info">
+        <h2>Protect Your Personal Information</h2>
+        <ul>
+            <li><strong>Don't Share Sensitive Data:</strong> Never give out your bank account details, credit card numbers, OTPs (One-Time Passwords), Aadhaar number, or other sensitive personal identification details.</li>
+            <li><strong>Be Wary of Phishing:</strong> Do not click on suspicious links sent via chat or email that ask for your login details or personal information. Log in directly through the official EasyToList website.</li>
+        </ul>
+      </section>
+
+      <!-- Common Scam Tactics -->
+      <section class="safety-section common-scams">
+        <h2>Recognize Common Scam Tactics</h2>
+        <ul>
+            <li>Deals that seem significantly cheaper than market value.</li>
+            <li>Buyers/sellers creating unnecessary urgency or pressure to act quickly.</li>
+            <li>Elaborate 'sob stories' or reasons why they need payment upfront or can't meet in person.</li>
+            <li>Poor grammar, spelling mistakes, or generic-sounding messages.</li>
+            <li>Requests to communicate or pay outside the EasyToList platform.</li>
+            <li>Refusal to meet in person or allow item inspection.</li>
+        </ul>
+      </section>
+
+      <!-- Reporting -->
+      <section class="safety-section report-section">
+        <h2>Report Suspicious Activity</h2>
+        <p>
+          Your reports help keep EasyToList safe for everyone. If you encounter an ad, user, or message that seems fraudulent or violates our policies, please report it immediately.
+        </p>
+        <p>
+          Contact us with details (like the Ad ID or username if possible) at:
+        </p>
+        <p>
+          <a href="mailto:easytolist5@gmail.com" class="report-email">easytolist5@gmail.com</a>
+        </p>
+        <p>
+          We take fraud reports seriously and will investigate accordingly.
+        </p>
+      </section>
+
+       <!-- Closing -->
+      <section class="safety-section closing">
+        <p>
+          By being cautious and following these guidelines, you can significantly reduce the risk of encountering fraud. Enjoy buying and selling safely on EasyToList!
+        </p>
+      </section>
+
+
+    </div><!-- End of safety-container -->
+  </div><!-- End of safety-page -->
+{{end}}

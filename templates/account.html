@@ -2,21 +2,6 @@
 
 {{define "head_extra"}}
   <link rel="stylesheet" href="/static/account.css">
-  <style>
-      /* Chat Modal Styles */
-      .chat-modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
-      .chat-modal-content { background-color: #fff; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 600px; position: relative; }
-      .close-chat { position: absolute; top: 10px; right: 20px; font-size: 28px; font-weight: bold; cursor: pointer; }
-      .chat-messages { height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; }
-      .chat-message { margin-bottom: 10px; }
-      .chat-message.sent { text-align: right; }
-      .message-header { display: flex; justify-content: space-between; font-size: 0.9em; margin-bottom: 4px; }
-      .message-content { font-size: 1em; }
-      .ad-preview { display: flex; align-items: center; margin-bottom: 8px; }
-      .ad-preview img { width: 60px; height: 60px; object-fit: cover; margin-right: 10px; }
-      .ad-info h3 { margin: 0; font-size: 1.1em; }
-      .ad-info p { margin: 2px 0; font-size: 0.9em; }
-    </style>
 {{end}}
 
 {{define "search_section"}}
@@ -54,8 +39,8 @@
       <!-- Membership Section -->
       <section id="membership" class="content-section">
         <div class="membership-header"> <h2>Membership</h2> <div class="membership-buttons"> <button class="btn-primary plan-switch active" data-plan="free">Free Plan</button> <button class="btn-primary plan-switch" data-plan="upgrade">Upgrade Plan</button> </div> </div>
-        <div id="free-plan" class="plan-details active"> <div class="plan-item"> <span class="plan-label">Current Plan:</span> <span class="plan-value">Free</span> </div> <div class="plan-item"> <span class="plan-label">Package Amount:</span> <span class="plan-value">Free</span> </div> <div class="plan-item"> <span class="plan-label">Maximum Ads/Month:</span> <span class="plan-value">5</span> </div> <div class="plan-item"> <span class="plan-label">Payment Status:</span> <span class="plan-value">—</span> </div> <div class="plan-item"> <span class="plan-label">Next Payment Date:</span> <span class="plan-value">—</span> </div> </div>
-        <div id="upgrade-plan" class="plan-details"> <div class="plan-item"> <span class="plan-label bold-gap">Current Plan:</span> <span class="plan-value bold-gap">Paid</span> </div> <div class="plan-item"> <span class="plan-label">Package Amount:</span> <span class="plan-value">₹100</span> </div> <div class="plan-item"> <span class="plan-label">Maximum Ads/Month:</span> <span class="plan-value">Unlimited</span> </div> <div class="plan-item"> <span class="plan-label">Payment Status:</span> <span class="plan-value">Not Upgraded</span> </div> <div class="plan-item"> <span class="plan-label">Next Payment Date:</span> <span class="plan-value">—</span> </div> </div>
+        <div id="free-plan" class="plan-details active"> <div class="plan-item"> <span class="plan-label">Current Plan:</span> <span class="plan-value">Free</span> </div> <div class="plan-item"> <span class="plan-label">Package Amount:</span> <span class="plan-value">Free</span> </div> <div class="plan-item"> <span class="plan-label">Maximum Ads/Month:</span> <span class="plan-value">-</span> </div> <div class="plan-item"> <span class="plan-label">Payment Status:</span> <span class="plan-value">—</span> </div> <div class="plan-item"> <span class="plan-label">Next Payment Date:</span> <span class="plan-value">—</span> </div> </div>
+        <div id="upgrade-plan" class="plan-details"> <div class="plan-item"> <span class="plan-label bold-gap">Current Plan:</span> <span class="plan-value bold-gap">Paid</span> </div> <div class="plan-item"> <span class="plan-label">Package Amount:</span> <span class="plan-value">free</span> </div> <div class="plan-item"> <span class="plan-label">Maximum Ads/Month:</span> <span class="plan-value">Unlimited</span> </div> <div class="plan-item"> <span class="plan-label">Payment Status:</span> <span class="plan-value">Not Upgraded</span> </div> <div class="plan-item"> <span class="plan-label">Next Payment Date:</span> <span class="plan-value">—</span> </div> </div>
       </section>
 
       <!-- Manage Ads Section -->
@@ -104,8 +89,21 @@
 </main>
 
 <!-- Chat Modal (Keep this with the main content) -->
-<div id="chatModal" class="chat-modal">
-    <div class="chat-modal-content"> <span class="close-chat">×</span> <h2 id="chatAdTitle">Chat</h2> <div id="chatMessages" class="chat-messages"></div> <div class="chat-input"> <input type="text" id="chatMessageInput" placeholder="Type your message..."> <button id="sendChatMessage">Send</button> </div> </div>
+<!-- *** NOTE: Now uses class 'active' for visibility *** -->
+<div id="chatModal" class="chat-modal"> <!-- Removed inline style if any -->
+    <div class="chat-modal-content">
+        <button class="chat-modal-close">×</button> <!-- Use button for accessibility -->
+        <div class="chat-modal-header">
+            <h2 id="chatAdTitle">Chat</h2>
+        </div>
+        <div id="chatMessages" class="chat-messages">
+            <!-- Messages will be loaded here -->
+        </div>
+        <div class="chat-input">
+            <input type="text" id="chatMessageInput" placeholder="Type your message...">
+            <button id="sendChatMessage">Send</button>
+        </div>
+    </div>
 </div>
 {{end}} {{/* End of "content" block */}}
 
@@ -130,7 +128,6 @@
         currentUserID = parseInt(accountContainer.dataset.userId, 10);
         if(isNaN(currentUserID)) {
              console.error("Could not parse current User ID from data attribute.");
-             // Handle error - maybe disable chat features?
         } else {
              console.log("Current User ID:", currentUserID);
         }
@@ -140,7 +137,7 @@
 
 
     function connectWebSocket() {
-        // Only connect if needed (e.g., when messages tab is active or modal opens)
+        // Only connect if needed
         if (ws && ws.readyState === WebSocket.OPEN) {
             console.log("WebSocket already open.");
             return;
@@ -164,13 +161,14 @@
             try {
                 const msg = JSON.parse(event.data);
                 console.log("WS Message Received (Account):", msg);
-                // Only handle if the chat modal is open and relevant
                 const chatModal = document.getElementById('chatModal');
-                if (chatModal && chatModal.style.display === 'block' && msg.ad_id === parseInt(currentAdID) && (msg.sender_id === currentUserID || msg.sender_id === parseInt(currentOtherUserID)) ) {
+
+                // *** UPDATED: Check using classList.contains('active') ***
+                if (chatModal && chatModal.classList.contains('active') && msg.ad_id === parseInt(currentAdID) && (msg.sender_id === currentUserID || msg.sender_id === parseInt(currentOtherUserID)) ) {
                      handleWebSocketMessage(msg);
                 } else {
                      console.log("Ignoring WS message (modal closed or different chat).");
-                     // Optionally: Show a notification for new messages in other chats
+                     // Optionally: Show a notification for new messages
                 }
             } catch (e) {
                  console.error("Error parsing WebSocket message (Account):", e, event.data);
@@ -184,8 +182,8 @@
         ws.onclose = function(event) {
             console.log('WebSocket disconnected (Account):', event.code, event.reason);
             ws = null;
-            // Optional: Simple reconnect logic if needed persistently
-            // setTimeout(connectWebSocket, 5000); // Reconnect after 5 seconds
+            // Optional: Simple reconnect logic
+            // setTimeout(connectWebSocket, 5000);
         };
     }
 
@@ -207,22 +205,27 @@
         const msgDiv = document.createElement('div');
         msgDiv.classList.add('chat-message');
 
-        // Use the globally stored currentUserID fetched earlier
         const isCurrentUserSender = msg.sender_id === currentUserID;
 
-        if (isCurrentUserSender) {
-            msgDiv.classList.add('sent');
-        } else {
-             msgDiv.classList.add('received'); // Optional class for styling received messages
-        }
+        msgDiv.classList.add(isCurrentUserSender ? 'sent' : 'received'); // Use classes for styling
 
-        msgDiv.innerHTML = `
-            <div class="message-header">
-            <strong>${msg.sender_name || 'Unknown Sender'}</strong>
-            <span class="timestamp">${formatTimestamp(msg.timestamp)}</span>
-            </div>
-            <div class="message-content">${msg.message || ''}</div>
-        `;
+        // Use textContent for security unless HTML is intended
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'message-header';
+        const senderStrong = document.createElement('strong');
+        senderStrong.textContent = msg.sender_name || 'Unknown Sender';
+        const timestampSpan = document.createElement('span');
+        timestampSpan.className = 'timestamp';
+        timestampSpan.textContent = formatTimestamp(msg.timestamp);
+        headerDiv.appendChild(senderStrong);
+        headerDiv.appendChild(timestampSpan);
+
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'message-content';
+        contentDiv.textContent = msg.message || ''; // Use textContent
+
+        msgDiv.appendChild(headerDiv);
+        msgDiv.appendChild(contentDiv);
 
         chatMessages.appendChild(msgDiv);
         // Scroll to the bottom
@@ -230,12 +233,12 @@
     }
 
 
-    // --- DOMContentLoaded equivalent for this script block ---
+    // --- DOMContentLoaded ---
     document.addEventListener('DOMContentLoaded', function() {
          console.log("Account page specific DOM ready.");
 
-        // Section switching for left menu
-        const menuItems = document.querySelectorAll('.account-menu .menu-item'); // More specific selector
+        // Section switching for left menu (no changes needed here)
+        const menuItems = document.querySelectorAll('.account-menu .menu-item');
         menuItems.forEach(function(item) {
             item.addEventListener('click', function(e) {
                 if (!item.classList.contains('signout')) { e.preventDefault(); }
@@ -253,10 +256,6 @@
                     if (targetSection) {
                          targetSection.classList.add('active');
                          console.log(`Switched to section: ${sectionId}`);
-                         // Connect WebSocket ONLY when messages tab is activated
-                         if (sectionId === 'messages') {
-                              //connectWebSocket(); // Consider connecting only when a conversation is opened
-                         }
                     } else {
                          console.warn(`Target section #${sectionId} not found.`);
                     }
@@ -264,17 +263,15 @@
             });
         });
 
-         // Profile subsection switching
+         // Profile subsection switching (no changes needed here)
          const subsectionButtons = document.querySelectorAll('.profile-actions .btn-secondary[data-subsection]');
          subsectionButtons.forEach(function(button) {
              button.addEventListener('click', function() {
                  const subsectionId = this.dataset.subsection;
                  if (!subsectionId) return;
-                 // Hide all subsections within the profile section
                  document.querySelectorAll('#profile .subsection').forEach(function(sub) {
                      sub.classList.remove('active');
                  });
-                 // Show the target subsection
                  const targetSub = document.getElementById(subsectionId);
                  if (targetSub) {
                      targetSub.classList.add('active');
@@ -285,7 +282,7 @@
              });
          });
 
-        // Membership Plan Switching
+        // Membership Plan Switching (no changes needed here)
         document.querySelectorAll('.membership-buttons .plan-switch').forEach(btn => {
             btn.addEventListener('click', function() {
                 document.querySelectorAll('.membership-buttons .plan-switch').forEach(b => b.classList.remove('active'));
@@ -303,7 +300,7 @@
         });
 
 
-        // --- Manage Ads Functionality ---
+        // --- Manage Ads Functionality (no changes needed here) ---
          // Edit button
          document.querySelectorAll('.edit-ad').forEach(function(btn) {
             btn.addEventListener('click', function() {
@@ -325,7 +322,6 @@
                 const editMode = adItem.querySelector('.edit-mode');
                 if(editMode) editMode.classList.remove('active');
                 if(viewMode) viewMode.classList.add('active');
-                // Optional: Reset form fields or image previews if needed
             });
         });
 
@@ -338,7 +334,7 @@
                 if (!editForm) return;
 
                 const deletedInput = editForm.querySelector('.deleted-images');
-                const imagePathInput = imagePreviewDiv.querySelector('input[name="existing_images[]"]'); // Find the hidden input holding the path
+                const imagePathInput = imagePreviewDiv.querySelector('input[name="existing_images[]"]');
 
                 if (!deletedInput || !imagePathInput) {
                      console.error("Could not find deleted images input or image path input.");
@@ -352,12 +348,7 @@
                     deletedInput.value = deleted.join(',');
                     console.log("Marked for deletion:", imagePath, " New list:", deletedInput.value);
                 }
-                imagePreviewDiv.remove(); // Remove the preview from the DOM
-
-                // Update max allowed for file input (Optional based on your logic)
-                // const remaining = editForm.querySelectorAll('.image-preview').length;
-                // const fileInput = editForm.querySelector('input[type="file"]');
-                // if(fileInput) fileInput.dataset.maxAllowed = 5 - remaining;
+                imagePreviewDiv.remove();
             });
         });
 
@@ -372,103 +363,93 @@
                          alert("Could not get Ad ID to delete.");
                          return;
                     }
-
                     const form = document.createElement('form');
                     form.method = 'POST';
-                    form.action = '/delete-ad'; // Make sure this matches your Go route
-
+                    form.action = '/delete-ad';
                     const hiddenField = document.createElement('input');
                     hiddenField.type = 'hidden';
                     hiddenField.name = 'ad_id';
                     hiddenField.value = adId;
                     form.appendChild(hiddenField);
-
                     document.body.appendChild(form);
                     form.submit();
-                    // No .then() here, page will reload on success/redirect from server
                 }
             });
         });
 
-        // File input handling for new images (complex, keep as is for now if working)
-        document.querySelectorAll('input[type="file"][name="images"]').forEach(function(input) {
-             // This DataTransfer logic is advanced, ensure it works correctly.
-            if (!input._dt) input._dt = new DataTransfer();
-            input.addEventListener('change', function(event) {
-                const maxAllowed = 5;
-                const imageManager = input.closest('.image-manager');
-                if (!imageManager) return;
-                const previewContainer = imageManager.querySelector('.existing-images');
-                 if (!previewContainer) return;
+        // File input handling for new images (no changes needed here if it was working)
+document.querySelectorAll('input[type="file"][name="images"]').forEach(function(input) {
+    // Initialize an array to hold new files
+    input.newFiles = [];
 
-                const existingCount = previewContainer.querySelectorAll('.image-preview:not(.new-image)').length;
-                const currentNewCount = input._dt.files.length; // Files already staged
-                const totalStaged = existingCount + currentNewCount;
+    // Function to update the file input's files property from newFiles array
+    function updateFileInput() {
+        const dt = new DataTransfer();
+        input.newFiles.forEach(file => dt.items.add(file));
+        input.files = dt.files;
+    }
 
-                const newFiles = Array.from(event.target.files); // Files just selected
-                let addedCount = 0;
+    input.addEventListener('change', function(event) {
+        const maxAllowed = 5;
+        const imageManager = input.closest('.image-manager');
+        if (!imageManager) return;
+        const previewContainer = imageManager.querySelector('.existing-images');
+        if (!previewContainer) return;
+        // Count existing images that are not new previews (loaded from DB)
+        const existingCount = previewContainer.querySelectorAll('.image-preview:not(.new-image)').length;
+        const allowedNew = maxAllowed - existingCount;
+        const selectedFiles = Array.from(event.target.files);
+        
+        if (selectedFiles.length > allowedNew) {
+            alert(`You can only upload ${allowedNew} more images.`);
+            // Only take allowed number of files
+            selectedFiles.splice(allowedNew);
+        }
+        
+        selectedFiles.forEach(file => {
+            // Add file to the array of new files
+            input.newFiles.push(file);
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const previewDiv = document.createElement('div');
+                previewDiv.className = 'image-preview new-image';
+                
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.alt = "New image preview";
+                
+                const deleteBtn = document.createElement('span');
+                deleteBtn.className = 'delete-image';
+                deleteBtn.innerHTML = '×';
+                deleteBtn.onclick = function() {
+                    // Remove file from newFiles array
+                    const index = input.newFiles.indexOf(file);
+                    if (index > -1) {
+                        input.newFiles.splice(index, 1);
+                    }
+                    updateFileInput();
+                    previewDiv.remove();
+                };
+                
+                previewDiv.appendChild(img);
+                previewDiv.appendChild(deleteBtn);
+                previewContainer.appendChild(previewDiv);
+            };
+            reader.readAsDataURL(file);
+        });
+        
+        updateFileInput();
+        console.log("Total new images staged:", input.newFiles.length);
+    });
+});
 
-                for (const file of newFiles) {
-                     if (totalStaged + addedCount >= maxAllowed) {
-                          alert(`You can only upload a total of ${maxAllowed} images.`);
-                          break; // Stop adding more files
-                     }
-
-                     // Add file to DataTransfer
-                     input._dt.items.add(file);
-                     addedCount++;
-
-                     // Create and append preview
-                     const reader = new FileReader();
-                     reader.onload = function(e) {
-                         const previewDiv = document.createElement('div');
-                         previewDiv.className = 'image-preview new-image'; // Mark as new
-                         const img = document.createElement('img');
-                         img.src = e.target.result;
-                         img.alt = "New image preview";
-
-                         const deleteBtn = document.createElement('span');
-                         deleteBtn.className = 'delete-image';
-                         deleteBtn.innerHTML = '×';
-                         deleteBtn.onclick = function() { // Use onclick for simplicity here
-                             previewDiv.remove();
-                             // Remove from DataTransfer
-                             const dt = new DataTransfer();
-                             let found = false;
-                             Array.from(input._dt.files).forEach(function(f) {
-                                 // Need a reliable way to identify the file to remove
-                                 // Comparing by name might be okay if names are unique enough in selection
-                                 if (!found && f.name === file.name) {
-                                     found = true; // Remove only the first match
-                                 } else {
-                                     dt.items.add(f);
-                                 }
-                             });
-                             input._dt = dt;
-                             input.files = dt.files; // Update the input's files collection
-                             console.log("Removed new image preview. Remaining staged:", input.files.length);
-                         };
-
-                         previewDiv.appendChild(img);
-                         previewDiv.appendChild(deleteBtn);
-                         previewContainer.appendChild(previewDiv);
-                     };
-                     reader.readAsDataURL(file);
-                 } // End for loop
-
-                 // Update the input's actual files property
-                 input.files = input._dt.files;
-                 console.log("Total images staged:", input.files.length);
-
-                 // Clear the original input value visually after processing
-                 event.target.value = null;
-             });
-         });
 
 
         // --- Conversation Click & Chat Modal ---
         const chatModal = document.getElementById('chatModal');
-        const closeChatButton = chatModal ? chatModal.querySelector('.close-chat') : null;
+        // Use the specific class for the close button from the CSS
+        const closeChatButton = chatModal ? chatModal.querySelector('.chat-modal-close') : null;
         const chatAdTitle = document.getElementById('chatAdTitle');
         const chatMessagesDiv = document.getElementById('chatMessages');
         const chatMessageInput = document.getElementById('chatMessageInput');
@@ -488,23 +469,34 @@
 
         if (closeChatButton) {
             closeChatButton.addEventListener('click', function() {
-                if (chatModal) chatModal.style.display = 'none';
+                if (chatModal) {
+                     // *** UPDATED: Use classList.remove('active') ***
+                     chatModal.classList.remove('active');
+                }
                 if (chatMessagesDiv) chatMessagesDiv.innerHTML = ''; // Clear messages
                  currentAdID = null; // Reset context
                  currentOtherUserID = null;
-                 // Maybe disconnect WebSocket if not needed elsewhere? ws?.close();
+                 // Consider disconnecting WebSocket if desired: ws?.close();
             });
+        } else {
+            console.warn("Chat modal close button (.chat-modal-close) not found.");
         }
 
-        // Close modal if clicking outside content
-        window.addEventListener('click', function(event) {
-            if (event.target == chatModal) {
-                 if (chatModal) chatModal.style.display = 'none';
-                if (chatMessagesDiv) chatMessagesDiv.innerHTML = '';
-                 currentAdID = null;
-                 currentOtherUserID = null;
-            }
-        });
+        // Close modal if clicking the background overlay (the modal element itself)
+        if (chatModal) {
+             chatModal.addEventListener('click', function(event) {
+                 // Check if the click target is the modal background itself, not its content
+                 if (event.target === chatModal) {
+                      // *** UPDATED: Use classList.remove('active') ***
+                      chatModal.classList.remove('active');
+                      if (chatMessagesDiv) chatMessagesDiv.innerHTML = '';
+                      currentAdID = null;
+                      currentOtherUserID = null;
+                      // Consider disconnecting WebSocket if desired: ws?.close();
+                 }
+             });
+        }
+
 
         function openChatForConversation(adID, otherUserID, element) {
              if (!chatModal || !chatAdTitle || !chatMessagesDiv || !chatMessageInput || !sendChatMessageButton) {
@@ -515,8 +507,16 @@
              connectWebSocket(); // Ensure connection is active
 
              const adTitle = element.querySelector('.ad-info h3')?.innerText || 'Ad Chat';
-             chatAdTitle.innerText = `Chat for: ${adTitle}`;
-             chatModal.style.display = 'block';
+             // Update the header text inside the specific header element
+             const headerTitleElement = chatModal.querySelector('.chat-modal-header h2'); // Target the H2 in the header
+             if(headerTitleElement) {
+                  headerTitleElement.innerText = `Chat for: ${adTitle}`;
+             } else {
+                  chatAdTitle.innerText = `Chat for: ${adTitle}`; // Fallback if H2 not found
+             }
+
+             // *** UPDATED: Use classList.add('active') ***
+             chatModal.classList.add('active');
              chatMessagesDiv.innerHTML = '<p style="text-align:center; color:grey;">Loading messages...</p>'; // Loading indicator
 
              // Fetch conversation history
@@ -526,22 +526,19 @@
                  return response.json();
              })
              .then(data => {
-                // Ensure currentUserID is set before processing messages
                 if (typeof currentUserID === 'undefined') {
                      console.error("Current user ID not available yet.");
-                     // Maybe fetch it here if needed, or wait?
-                     // For now, log error and continue, messages might render incorrectly aligned.
                 }
 
                  chatMessagesDiv.innerHTML = ''; // Clear loading message
                  if (data.messages && data.messages.length > 0) {
                      data.messages.forEach(msg => {
-                         handleWebSocketMessage({ // Simulate a WS message structure for consistent rendering
-                             sender_id: msg.senderID, // Use correct field name from getConversationHandler
+                         handleWebSocketMessage({
+                             sender_id: msg.senderID,
                              sender_name: msg.senderName,
                              message: msg.content,
-                             timestamp: msg.timestamp, // Use timestamp from fetched data
-                             ad_id: parseInt(adID) // Ensure ad_id is included if needed by handler
+                             timestamp: msg.timestamp,
+                             ad_id: parseInt(adID)
                          });
                      });
                  } else {
@@ -555,8 +552,9 @@
              });
 
 
-             // --- Send Message Handler (inside openChatForConversation to capture context) ---
-             sendChatMessageButton.onclick = async function() {
+             // --- Send Message Handler ---
+             // Use addEventListener for better practice than onclick, especially if might be called multiple times
+             const sendMessageHandler = async function() {
                  const content = chatMessageInput.value.trim();
                  if (!content) return;
                  if (!currentAdID || !currentOtherUserID) {
@@ -571,7 +569,7 @@
 
                  const messagePayload = {
                      ad_id: parseInt(currentAdID),
-                     receiver_id: parseInt(currentOtherUserID), // Use receiver_id as expected by backend WS handler
+                     receiver_id: parseInt(currentOtherUserID),
                      message: content
                  };
 
@@ -579,22 +577,30 @@
 
                  try {
                       ws.send(JSON.stringify(messagePayload));
-                      // Assume success, message will be echoed back via WS onmessage
                       chatMessageInput.value = '';
                       chatMessageInput.focus();
                  } catch (error) {
                        console.error('Error sending message via WebSocket:', error);
                        alert('Failed to send message. Please check your connection.');
                  }
-             }; // End sendChatMessageButton.onclick
+             };
 
-            // Also handle Enter key for sending message
-            chatMessageInput.onkeypress = function(event) {
-                if (event.key === 'Enter') {
-                    event.preventDefault(); // Prevent form submission if it were in a form
-                    sendChatMessageButton.onclick(); // Trigger the click handler
-                }
-            };
+             // Remove previous listeners if any to prevent duplicates, then add new one
+             sendChatMessageButton.removeEventListener('click', sendMessageHandler);
+             sendChatMessageButton.addEventListener('click', sendMessageHandler);
+
+
+             // Also handle Enter key for sending message
+             // Remove previous listener first
+              const keypressHandler = function(event) {
+                 if (event.key === 'Enter') {
+                     event.preventDefault();
+                     sendMessageHandler(); // Trigger the handler
+                 }
+             };
+             chatMessageInput.removeEventListener('keypress', keypressHandler);
+             chatMessageInput.addEventListener('keypress', keypressHandler);
+
 
         } // End openChatForConversation
 

@@ -1,656 +1,819 @@
 /* ==========================================================================
    GENERAL STYLES
-   ========================================================================== */
-   body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    background-color: #e2f1ff; /* Light blue background */
+========================================================================== */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background-color: #e2f1ff; /* Light blue background */
 }
 
 /* ==========================================================================
-   HEADER & NAVIGATION
-   ========================================================================== */
-/* Header */
-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 2rem;
-    background: white;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    position: relative;
-    border-bottom: 1px solid #0000002b;
-}
-
-.logo-container {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-left: 1rem;
-}
-
-.logo-container a {
-    display: flex;
-    align-items: center;
-    text-decoration: none;
-}
-
-.company-name {
-    color: #1DBFC1;
-    font-weight: bold;
-    font-size: 1.5rem;
-    transition: transform 0.3s ease;
-}
-
-.company-name:hover {
-    transform: scale(1.05);
-}
-
-.logo {
-    max-width: 50px;
-    height: auto;
-    transition: transform 0.3s ease;
-}
-
-.logo:hover {
-    transform: scale(1.05);
-}
-
-/* Home Navigation Links */
-.home-links {
-    display: flex;
-    gap: 2rem;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-}
-
-.home-links a {
-    color: #333;
-    text-decoration: none;
-    transition: color 0.3s ease;
-}
-
-.home-links a:hover {
-    color: #1DBFC1;
-}
-
-/* Right-side Navigation */
-.main-links {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    margin-right: 1rem;
-}
-
-.post-ad-btn {
-    background: #1DBFC1;
-    color: white !important;
-    padding: 0.5rem 1.5rem;
-    border-radius: 20px;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    border: 2px solid transparent;
-}
-
-.post-ad-btn:hover {
-    background: white;
-    color: #1DBFC1 !important;
-    border-color: #1DBFC1;
-}
-
-.main-links a:not(.post-ad-btn) {
-    color: #333;
-    text-decoration: none;
-    transition: color 0.3s ease;
-    font-weight: bold;
-}
-
-.main-links a:not(.post-ad-btn):hover {
-    color: #1DBFC1;
-}
-
-/* Account Dropdown */
-.account-dropdown {
-    position: relative;
-    display: inline-block;
-}
-
-.dropdown-menu {
-    display: none;
-    position: absolute;
-    right: 0;
-    top: 100%;
-    background: white;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    min-width: 150px;
-    z-index: 1000;
-    border-radius: 5px;
-    padding: 0.5rem 0;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.dropdown-menu.show {
-    display: flex;
-    animation: slideDown 0.3s ease;
-}
-
-.dropdown-menu a {
-    padding: 0.5rem 1rem;
-    color: #333;
-    text-decoration: none;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    width: 80%;
-    text-align: left;
-    transition: all 0.3s ease;
-}
-
-.dropdown-menu a:last-child {
-    border-bottom: none;
-}
-
-.dropdown-menu a:hover {
-    background: rgba(29, 191, 193, 0.1);
-    color: #1DBFC1;
-}
-
-.user-icon {
-    width: 32px;
-    height: 32px;
-    transition: transform 0.3s ease;
-    display: block;
-}
-
-.user-icon:hover {
-    transform: scale(1.1);
-}
-
-/* Dropdown Animation */
-@keyframes slideDown {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* ==========================================================================
-   MOBILE RESPONSIVE (Header & Nav)
-   ========================================================================== */
-@media (max-width: 768px) {
-    header { padding: 1rem; }
-    .logo-container { margin-left: 0; flex: 1; }
-    .home-links { display: none; }
-    .main-links {
-        margin-right: 0;
-        gap: 0.8rem;
-        justify-content: flex-end;
-        flex: 1;
-    }
-    .post-ad-btn {
-        order: 1;
-        padding: 0.4rem 1rem;
-        font-size: 0.9rem;
-    }
-    .account-dropdown { order: 2; }
-    .user-icon { width: 28px; height: 28px; }
-    .dropdown-menu { right: 0; min-width: 160px; }
-    .dropdown-menu.mobile-dropdown {
-        display: none;
-        position: fixed;
-        top: 60px;
-        left: 50%;
-        transform: translateX(-5%);
-        width: 50%;
-        max-width: 300px;
-    }
-    .dropdown-menu.mobile-dropdown.show { display: flex; }
-    .dropdown-menu.mobile-dropdown a { width: 100%; }
-}
-
-@media (min-width: 769px) {
-    .dropdown-menu.mobile-dropdown { display: none !important; }
-}
-
-@media (max-width: 768px) {
-    .dropdown-menu.desktop-dropdown { display: none !important; }
-}
-
-/* ==========================================================================
-   ACCOUNT PAGE STYLES
-   ========================================================================== */
+   ACCOUNT PAGE LAYOUT & STRUCTURE
+========================================================================== */
 .account-container {
-    display: flex;
-    min-height: calc(100vh - 80px);
-    padding: 20px;
-    gap: 30px;
+  display: flex;
+  min-height: calc(100vh - 80px);
+  padding: 20px;
+  gap: 30px;
 }
 
+/* Sidebar (Left Section) */
 .account-sidebar {
-    flex: 0 0 250px;
-    background: #ffffff;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  flex: 0 0 250px;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
+/* Sidebar Menu */
 .account-menu {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .menu-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 15px 20px;
-    font-size: 1.1rem;
-    color: #333;
-    transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 20px;
+  font-size: 1.1rem;
+  color: #333;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: none; 
+  background: none;
 }
 
-.menu-item:hover,
-.menu-item.active {
-    background: rgba(29, 191, 193, 0.1) !important;
-    color: #1DBFC1 !important;
+.menu-item:not(.signout):hover,
+.menu-item.active:not(.signout) {
+  background: rgba(29, 191, 193, 0.1) !important;
+  color: #1DBFC1 !important;
 }
 
-.menu-item:hover .menu-icon,
-.menu-item.active .menu-icon {
-    filter: invert(58%) sepia(90%) saturate(385%) hue-rotate(142deg) brightness(89%) contrast(87%);
+.menu-item:not(.signout):hover .menu-icon,
+.menu-item.active:not(.signout) .menu-icon {
+  filter: invert(58%) sepia(90%) saturate(385%) hue-rotate(142deg) brightness(89%) contrast(87%);
 }
-
 .menu-icon {
-    width: 24px;
-    height: 24px;
-    transition: filter 0.3s ease;
+  width: 24px;
+  height: 24px;
+  transition: filter 0.3s ease;
 }
 
+/* Sign Out Button */
 .signout {
-    color: #ff4444 !important;
-    font-weight: bold;
-    font-size: 1.1rem !important;
-    margin-top: 20px;
+  color: #ff4444 !important;
+  font-weight: bold;
+  font-size: 1.1rem !important;
+  margin-top: 20px;
 }
-
 .signout:hover {
-    background: rgb(255 0 0 / 0%) !important;
+  background: transparent !important; /* Or rgb(255 0 0 / 0%) as you had */
+  transform: scale(1.05);
 }
 
+/* Main Content (Right Section) */
 .account-content {
-    flex: 1;
-    background: white;
-    border-radius: 8px;
-    padding: 30px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  flex: 1;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 30px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  min-width: 0; /* Prevent flex item from overflowing */
 }
 
 .content-section {
-    display: none;
-    animation: fadeIn 0.3s ease;
+  display: none;
+  animation: fadeIn 0.3s ease;
 }
-
 .content-section.active {
-    display: block;
-}
-
-.profile-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    padding-bottom: 1rem;
-    margin-bottom: 2rem;
-}
-
-.subsection {
-    display: none;
-}
-
-.subsection.active {
-    display: block;
-    animation: slideIn 0.3s ease;
-}
-
-.info-card {
-    background: #f8f9fa;
-    padding: 20px;
-    border-radius: 8px;
-    max-width: 500px;
-}
-
-.password-form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    max-width: 400px;
-}
-
-.profile-actions {
-    display: flex;
-    gap: 1rem;
-}
-
-.btn-secondary {
-    background: #1DBFC1;
-    color: white;
-    border: none;
-    padding: 0.8rem 1.5rem;
-    cursor: pointer;
-    transition: background 0.3s ease;
-}
-
-.btn-secondary:hover {
-    background: #169597;
-}
-
-.info-card p {
-    padding: 1rem 0;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    margin: 0;
-    font-size: 1.1rem;
-}
-
-.info-card p:last-child {
-    border-bottom: none;
-}
-
-.password-form input {
-    padding: 0.8rem;
-    margin-bottom: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 1rem;
+  display: block;
 }
 
 /* ==========================================================================
-   MEMBERSHIP SECTION STYLES
-   ========================================================================== */
+   PROFILE & MEMBERSHIP SECTIONS (As Previously Defined)
+========================================================================== */
+.profile-header,
 .membership-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    padding-bottom: 1rem;
-    margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding-bottom: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap; /* Allow wrapping on small screens */
 }
 
+.subsection {
+  display: none;
+}
+.subsection.active {
+  display: block;
+  animation: slideIn 0.3s ease;
+}
+
+.info-card {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 500px;
+  border: 1px solid #e2e8f0; /* Subtle border */
+}
+
+.profile-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.btn-secondary {
+  background: #1DBFC1;
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  border-radius: 6px; /* Added border-radius */
+}
+.btn-secondary:hover {
+  background: #169597;
+}
+
+.info-card p {
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  margin: 0;
+  font-size: 1.1rem;
+  word-wrap: break-word; /* Prevent long text overflow */
+}
+.info-card p:last-child {
+  border-bottom: none;
+}
+
+.password-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-width: 400px;
+}
+
+.password-form input {
+  padding: 0.8rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+/* Membership Details */
 .membership-buttons {
-    display: flex;
-    gap: 1rem;
+  display: flex;
+  gap: 1rem;
 }
 
 .membership-buttons .btn-primary {
-    padding: 0.5rem 1rem;
-    border: none;
-    cursor: pointer;
-    transition: background 0.3s ease;
+  padding: 0.5rem 1rem;
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s ease, color 0.3s ease; /* Added color transition */
+  border-radius: 6px; /* Added border-radius */
+  background-color: #f0f0f0; /* Default background */
+  color: #333; /* Default text color */
 }
 
 .membership-buttons .btn-primary.active,
 .membership-buttons .btn-primary:hover {
-    background: #1DBFC1;
-    color: white;
+  background: #1DBFC1;
+  color: white;
 }
 
 /* Plan Details */
 .plan-details {
-    display: none;
-    animation: fadeIn 0.3s ease;
+  display: none;
+  animation: fadeIn 0.3s ease;
 }
-
 .plan-details.active {
-    display: block;
+  display: block;
 }
-
 .plan-item {
-    padding: 1.2rem 0;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  padding: 1.2rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap; /* Allow wrapping */
+  gap: 10px; /* Add gap for wrapped items */
 }
-
 .bold-gap {
-    font-weight: bold;
-    margin-right: 10px;
+  font-weight: bold;
+  margin-right: 10px;
 }
-
 .plan-item:last-child {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 /* ==========================================================================
-   MANAGE ADS SECTION STYLES
-   ========================================================================== */
+   MANAGE ADS SECTION
+========================================================================== */
 .ads-list {
-    display: grid;
-    gap: 2rem;
-    padding: 1rem;
+  display: grid;
+  gap: 2rem;
+  padding: 1rem 0; /* Removed horizontal padding to rely on container */
 }
 
 .ad-item {
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    padding: 1.5rem;
-    transition: transform 0.3s ease;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Added box-shadow transition */
+  border: 1px solid #e2e8f0; /* Subtle border */
 }
-
 .ad-item:hover {
-    transform: translateY(-3px);
+  transform: translateY(-4px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12);
 }
 
-/* Carousel */
-.carousel {
-    position: relative;
+/* Carousel Container Styling */
+#manage-ads .ad-item .carousel { /* Made selector more specific */
+    max-width: 500px; /* *** LIMIT CAROUSEL WIDTH *** */
+    margin-left: auto; /* Center */
+    margin-right: auto; /* Center */
     margin-bottom: 1rem;
+    position: relative; /* Keep for controls */
+    overflow: hidden; /* Ensures inner items conform */
+    border-radius: 8px; /* Match ad-item rounding */
 }
-
 .carousel-inner {
-    display: flex;
-    overflow: hidden;
-    border-radius: 8px;
+  display: flex;
+  /* overflow: hidden; /* Moved overflow to .carousel */
+  /* border-radius: 8px; /* Moved rounding to .carousel */
 }
-
 .carousel-item {
-    min-width: 100%;
-    transition: transform 0.5s ease;
+  min-width: 100%;
+  transition: transform 0.5s ease;
 }
 
-/* Updated Carousel Image: contain & max-height */
+/* Carousel Image Styling - *** UPDATED *** */
 #manage-ads .carousel-item img {
-    width: 100%;
-    max-height: 200px;
+    display: block; /* Ensure block display */
+    width: 100%; /* Fill the constrained .carousel container */
+    max-height: 250px; /* Increased slightly, adjust if needed */
+    height: auto; /* Maintain aspect ratio within constraints */
     object-fit: contain;
+    background-color: #f8f9fa;
+    /* border-radius: 6px; /* Rounding is now on .carousel */
 }
 
-/* Title & Description styling */
+
+/* Title & Description */
 #manage-ads .ad-item h3,
 #manage-ads .ad-item p {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.3);
-    padding-bottom: 0.5rem;
-    margin-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1); /* Lighter border */
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  word-wrap: break-word; /* Prevent long text overflow */
 }
-
 #manage-ads .ad-item h3 {
-    color: #1DBFC1;
+  color: #1DBFC1;
+  font-size: 1.3rem; /* Slightly larger title */
 }
 
-/* Edit mode */
+/* Edit Mode */
 .edit-mode {
-    display: none;
+  display: none;
 }
-
 .edit-mode.active {
-    display: block;
-    animation: slideIn 0.3s ease;
+  display: block;
+  animation: slideIn 0.3s ease;
 }
 
 /* Image Manager */
 .image-manager {
-    margin-bottom: 1rem;
+  margin-bottom: 1rem;
 }
-
 .existing-images {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-    margin-bottom: 1rem;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
 }
-
 .image-preview {
-    position: relative;
-    width: 100px;
-    height: 100px;
-    animation: fadeIn 0.3s ease;
+  position: relative;
+  width: 100px;
+  height: 100px;
+  animation: fadeIn 0.3s ease;
+  border-radius: 4px; /* Added rounding */
+  overflow: hidden; /* Clip image to rounded corners */
 }
-
 .image-preview img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 4px;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-/* Delete image button */
+/* Delete Image Button */
 .delete-image {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    background: rgba(255, 0, 0, 0.7);
-    color: white;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background 0.3s ease;
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: rgba(255, 0, 0, 0.7);
+  color: white;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease; /* Added transform transition */
+  font-size: 0.8rem; /* Made X smaller */
+  line-height: 1; /* Ensure vertical centering */
 }
-
 .delete-image:hover {
-    background: red;
+  background: red;
+  transform: scale(1.1); /* Slight scale on hover */
 }
 
-/* Form Actions & Edit Mode Inputs */
-.form-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    margin-top: 1rem;
+/* Manage Ads - Action Buttons in View Mode */
+#ad-actions, /* This ID seems specific, ensure it's used correctly or remove if .ad-actions covers it */
+.ad-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.8rem 0;
+  border-top: 1px solid #eee;
+  margin-top: 1rem;
+  flex-wrap: wrap; /* Allow wrapping */
 }
 
-#manage-ads .edit-mode label {
-    display: block;
-    font-weight: bold;
-    margin-bottom: 0.3rem;
+/* Buttons within .ad-actions */
+.ad-actions .btn-small {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border-radius: 4px;
+  cursor: pointer;
+  border: none;
+  transition: background 0.3s ease, transform 0.1s ease, box-shadow 0.2s ease; /* Added box-shadow transition */
+}
+.ad-actions .btn-small:hover {
+   transform: translateY(-2px); /* Lift effect on hover */
+   box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
+.ad-actions .btn-small:active {
+   transform: translateY(-1px);
+   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
-#manage-ads .edit-mode input[type="text"],
-#manage-ads .edit-mode textarea {
-    display: block;
-    width: 100%;
-    margin-bottom: 1rem;
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-/* Edit & Delete Buttons */
+/* Edit & Delete Buttons in View Mode */
 #manage-ads .ad-actions .edit-ad {
-    background-color: #1DBFC1;
-    color: #fff;
-    border: none;
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-    transition: background 0.3s ease;
-    margin-right: 0.5rem;
+  background-color: #1DBFC1;
+  color: #fff;
 }
-
 #manage-ads .ad-actions .edit-ad:hover {
-    background-color: #169597;
+  background-color: #169597;
 }
-
 #manage-ads .ad-actions .delete-ad {
-    background-color: red;
-    color: #fff;
-    border: none;
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-    transition: background 0.3s ease;
+  background-color: #ff4444; /* Slightly less harsh red */
+  color: #fff;
 }
-
 #manage-ads .ad-actions .delete-ad:hover {
-    background-color: darkred;
+  background-color: #cc0000; /* Darker red on hover */
 }
 
-/* Cancel & Save Button Styles in Edit Mode */
+/* Buttons within Edit Mode Form (Cancel & Save) */
+#manage-ads .edit-mode .form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+#manage-ads .edit-mode .form-actions button {
+  border: none;
+  padding: 0.7rem 1.2rem; /* Slightly larger padding */
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.1s ease, box-shadow 0.2s ease; /* Added transitions */
+  border-radius: 6px; /* Consistent rounding */
+  font-weight: 500; /* Slightly bolder text */
+}
+#manage-ads .edit-mode .form-actions button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
+#manage-ads .edit-mode .form-actions button:active {
+    transform: translateY(-1px);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
 #manage-ads .edit-mode .form-actions button.cancel-edit {
-    background-color: red;
-    color: #fff;
-    border: none;
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-    transition: background 0.3s ease;
+  background-color: #ff4444; /* Match delete button */
+  color: #fff;
 }
-
 #manage-ads .edit-mode .form-actions button.cancel-edit:hover {
-    background-color: darkred;
+  background-color: #cc0000;
 }
-
 #manage-ads .edit-mode .form-actions button.save-changes {
-    background-color: #1DBFC1;
-    color: #fff;
-    border: none;
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-    transition: background 0.3s ease;
+  background-color: #1DBFC1; /* Match edit button */
+  color: #fff;
 }
-
 #manage-ads .edit-mode .form-actions button.save-changes:hover {
-    background-color: #169597;
+  background-color: #169597;
 }
 
 /* Ensure full width for edit mode inputs */
 #manage-ads .edit-mode .image-manager,
 #manage-ads .edit-mode input[type="text"],
 #manage-ads .edit-mode textarea {
+  width: 100%;
+  box-sizing: border-box; /* Include padding and border in width */
+}
+#manage-ads .edit-mode input[type="text"],
+#manage-ads .edit-mode textarea {
+  margin-bottom: 1rem;
+  padding: 0.8rem; /* Increased padding */
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem; /* Ensure consistent font size */
+}
+#manage-ads .edit-mode textarea {
+    min-height: 100px; /* Give textarea some default height */
+    resize: vertical; /* Allow vertical resizing */
+}
+
+/* ============================================================
+   Stylish Chatbox - (Requires JS update to use .active class)
+================================================================ */
+.chat-modal {
+    display: none; /* Hidden by default; controlled via JS */
+    position: fixed;
+    z-index: 10000; /* Ensure it appears on top */
+    top: 0;
+    left: 0;
     width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6); /* Semi-transparent dark overlay */
+    backdrop-filter: blur(5px);
+    transition: opacity 0.3s ease;
+    opacity: 0; /* Start faded out */
+}
+.chat-modal.active { /* Added class for JS control */
+    display: block;
+    opacity: 1;
+}
+
+.chat-modal-content {
+    position: fixed;
+    right: 20px;
+    top: 50%; /* Center vertically */
+    transform: translate(100%, -50%); /* Start off-screen right, centered vertically */
+    width: 350px;
+    max-width: calc(100% - 40px); /* Ensure padding on mobile */
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2); /* Enhanced shadow */
+    overflow: hidden;
+    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); /* Smooth slide */
+    display: flex; /* Use flex for structure */
+    flex-direction: column; /* Stack header, messages, input vertically */
+    max-height: 80vh; /* Limit height */
+    border: 1px solid #e2e8f0; /* Subtle border */
+}
+.chat-modal.active .chat-modal-content {
+    transform: translate(0, -50%); /* Slide in */
+}
+
+/* Chat Modal Header */
+.chat-modal-header {
+    background: #1DBFC1; /* Match theme color */
+    padding: 12px 15px; /* Adjusted padding */
+    color: #fff;
+    font-size: 1.1rem; /* Adjusted size */
+    text-align: center;
+    font-weight: 600; /* Bolder */
+    flex-shrink: 0; /* Prevent header from shrinking */
+    position: relative; /* For close button positioning */
+}
+
+/* Close button for chat modal */
+.chat-modal-close {
+    position: absolute;
+    top: 50%;
+    right: 15px;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1.6rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.2s ease;
+}
+.chat-modal-close:hover {
+    color: #ffffff;
+}
+
+
+/* Chat Messages Container */
+.chat-messages {
+    flex-grow: 1; /* Allow messages area to fill space */
+    overflow-y: auto;
+    padding: 15px;
+    background: #f8f9fa; /* Lighter background */
+    display: flex;
+    flex-direction: column; /* Stack messages */
+    gap: 10px; /* Space between messages */
+}
+/* Basic message styling */
+.chat-message {
+    padding: 8px 12px;
+    border-radius: 15px;
+    max-width: 75%;
+    word-wrap: break-word;
+    line-height: 1.4; /* Improve readability */
+}
+.chat-message.sent {
+    background-color: #dcf8c6; /* Example sent color */
+    align-self: flex-end;
+    border-bottom-right-radius: 5px; /* Bubble tail effect */
+}
+.chat-message.received {
+    background-color: #fff; /* Example received color */
+    align-self: flex-start;
+    border: 1px solid #eee;
+    border-bottom-left-radius: 5px; /* Bubble tail effect */
+}
+
+/* Custom Scrollbar for Chat Messages */
+.chat-messages::-webkit-scrollbar {
+    width: 6px;
+}
+.chat-messages::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+.chat-messages::-webkit-scrollbar-thumb {
+    background: #cccccc;
+    border-radius: 3px;
+}
+.chat-messages::-webkit-scrollbar-thumb:hover {
+    background: #aaaaaa;
+}
+
+/* Chat Input Section */
+.chat-input {
+    display: flex;
+    border-top: 1px solid #e0e0e0;
+    flex-shrink: 0;
+    background: #fff;
+}
+.chat-input input[type="text"] {
+    flex: 1;
+    padding: 12px 15px;
+    border: none;
+    font-size: 1rem;
+    outline: none;
+    background: transparent;
+}
+.chat-input button {
+    padding: 10px 18px;
+    border: none;
+    background-image: linear-gradient(135deg, #1de9b6 0%, #1DBFC1 50%, #00b8d4 100%);
+    background-size: 250% auto;
+    color: #fff;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-position 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.2s ease;
+}
+.chat-input button:hover {
+    background-position: right center;
+    transform: scale(1.05);
+}
+.chat-input button:active {
+    transform: scale(0.98);
+    background-position: left center;
+    transition-duration: 0.1s;
 }
 
 /* ==========================================================================
-   CONVERSATION & CHAT STYLES
+   RESPONSIVE STYLES
+========================================================================== */
+@media (max-width: 768px) {
+  .account-container {
+    flex-direction: column;
+    padding: 15px;
+    gap: 20px;
+  }
+  .account-sidebar {
+    flex: 0 0 auto;
+    margin-bottom: 20px;
+  }
+  .account-content {
+     padding: 20px;
+  }
+  .ads-list {
+    gap: 1.5rem;
+  }
+  .ad-item {
+    padding: 1rem;
+  }
+
+  /* Center the action buttons in manage ads */
+  .ad-actions,
+  #manage-ads .edit-mode .form-actions {
+    justify-content: center;
+  }
+
+   /* Adjust chat modal */
+   .chat-modal-content {
+       width: calc(100% - 30px);
+       right: 15px;
+       max-height: 75vh;
+   }
+
+   /* Adjust carousel max-width for tablets if needed */
+    #manage-ads .ad-item .carousel {
+        max-width: 400px; /* Slightly smaller max-width on tablet */
+    }
+}
+
+@media (max-width: 480px) {
+    .account-sidebar {
+        padding: 15px;
+    }
+    .account-content {
+        padding: 15px;
+    }
+    .profile-header, .membership-header {
+        /* flex-direction: column; /* Already handled by flex-wrap */
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    .profile-actions {
+        width: 100%;
+        justify-content: space-around; /* Better spacing */
+    }
+    .btn-secondary {
+        padding: 0.6rem 1rem;
+    }
+    .info-card p {
+        font-size: 1rem;
+    }
+    .ad-actions .btn-small {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+    }
+    #manage-ads .edit-mode .form-actions button {
+        padding: 0.6rem 1rem;
+    }
+
+    /* Adjust carousel max-width for mobile */
+    #manage-ads .ad-item .carousel {
+        max-width: 100%; /* Allow full width on mobile */
+    }
+     #manage-ads .carousel-item img {
+        max-height: 200px; /* Reduce max height slightly on mobile */
+    }
+
+
+    /* Adjust chat modal further */
+    .chat-modal-content {
+        width: calc(100% - 20px);
+        right: 10px;
+        max-height: 70vh;
+    }
+    .chat-modal-header {
+        font-size: 1rem;
+        padding: 10px 15px;
+    }
+    .chat-modal-close {
+        font-size: 1.4rem;
+        right: 10px;
+    }
+    .chat-input input[type="text"] {
+        padding: 10px 12px;
+        font-size: 0.95rem;
+    }
+    .chat-input button {
+        padding: 8px 15px;
+        font-size: 0.95rem;
+    }
+}
+
+/* Animation definitions */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+ 
+/* ==========================================================================
+   MESSAGES SECTION (Including Conversation List)
    ========================================================================== */
+
+#messages h2 {
+    /* Existing h2 styles if any */
+    margin-bottom: 1.5rem; /* Example */
+}
+
 .conversation-list {
-    border: 1px solid #ccc;
-    padding: 10px;
-    max-height: 400px;
-    overflow-y: auto;
-    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 
 .conversation-item {
-    padding: 10px;
-    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #fff; /* Give it a background */
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    border: 1px solid #e8e8e8;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    /*** THIS IS THE LINE YOU NEED ***/
     cursor: pointer;
 }
 
+/* Optional: Add a hover effect for better UX */
 .conversation-item:hover {
-    background-color: #f9f9f9;
+    background-color: #f8f9fa; /* Slightly grey background on hover */
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
-/* ==========================================================================
-   ANIMATIONS
-   ========================================================================== */
-@keyframes slideIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+.conversation-item .ad-preview {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-grow: 1; /* Allow preview to take available space */
+    min-width: 0; /* Prevent overflow */
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.8); }
-    to { opacity: 1; transform: scale(1); }
+.conversation-item .ad-preview img {
+    width: 70px; /* Slightly larger image */
+    height: 70px;
+    object-fit: cover;
+    border-radius: 6px;
+    flex-shrink: 0; /* Prevent image shrinking */
+}
+
+.conversation-item .ad-info {
+    min-width: 0; /* Prevent overflow */
+}
+
+
+.conversation-item .ad-info h3 {
+    margin: 0 0 4px 0;
+    font-size: 1.1em;
+    color: #1DBFC1; /* Theme color */
+    white-space: nowrap; /* Prevent title wrapping */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Add ellipsis if too long */
+}
+
+.conversation-item .ad-info p {
+    margin: 2px 0;
+    font-size: 0.9em;
+    color: #555;
+    white-space: nowrap; /* Prevent wrapping */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Add ellipsis if too long */
+}
+
+.conversation-item .timestamp {
+    font-size: 0.85em;
+    color: #777;
+    white-space: nowrap; /* Prevent wrapping */
+    margin-left: 15px; /* Space between ad info and timestamp */
+    flex-shrink: 0; /* Prevent timestamp shrinking */
+}
+
+/* Responsive adjustments for conversation items if needed */
+@media (max-width: 576px) {
+    .conversation-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .conversation-item .timestamp {
+        margin-left: 0;
+        margin-top: 5px;
+        align-self: flex-end; /* Move timestamp to bottom right */
+    }
+    .conversation-item .ad-preview {
+        width: 100%; /* Take full width */
+    }
+     .conversation-item .ad-preview img {
+        width: 60px;
+        height: 60px;
+    }
 }

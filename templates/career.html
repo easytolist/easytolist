@@ -1,0 +1,247 @@
+{{/* templates/career.html */}}
+
+{{define "title"}}Careers - EasyToList{{end}}
+
+{{define "head_extra"}}
+  {{/* Reusing similar styles from about.html, adapted for career page */}}
+  <style>
+    /* --- General Page Styles --- */
+    .career-page {
+      background-color: #f8f9fa;
+      padding: 40px 0;
+      overflow-x: hidden;
+    }
+
+    .career-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* --- Section Styling --- */
+    .career-section {
+      background-color: #ffffff;
+      padding: 40px 30px;
+      margin-bottom: 30px;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    /* Stagger animation */
+    .career-section:nth-child(1) { animation-delay: 0.1s; }
+    .career-section:nth-child(2) { animation-delay: 0.2s; }
+    .career-section:nth-child(3) { animation-delay: 0.3s; }
+    .career-section:nth-child(4) { animation-delay: 0.4s; }
+
+
+    /* --- Typography --- */
+    .career-page h1, .career-page h2 {
+      font-family: 'Arial', sans-serif;
+      color: #1DBFC1;
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+    }
+
+    .career-page h1 {
+      font-size: 2.5rem;
+      text-align: center;
+      margin-bottom: 1rem; /* Reduced margin for text H1 */
+    }
+
+     .career-page h2 {
+      font-size: 1.8rem;
+      border-bottom: 2px solid #e0e0e0;
+      padding-bottom: 0.5rem;
+    }
+
+    .career-page p, .career-page ul {
+      font-family: 'Arial', sans-serif;
+      line-height: 1.7;
+      color: #555;
+      font-size: 1.05rem;
+      margin-bottom: 1rem;
+    }
+    .career-page p strong {
+        color: #333;
+        font-weight: 600;
+    }
+
+    .career-page a {
+      color: #1DBFC1;
+      text-decoration: none;
+      transition: color 0.3s ease;
+      font-weight: 500; /* Make email link slightly bolder */
+    }
+    .career-page a:hover {
+      color: #148f91;
+      text-decoration: underline;
+    }
+
+    /* --- Hero Section --- */
+    .career-hero {
+      background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%); /* Different gradient */
+      padding: 60px 20px;
+      text-align: center;
+      margin-bottom: 40px;
+      border-radius: 12px;
+      color: #ffffff;
+      box-shadow: 0 8px 20px rgba(44, 62, 80, 0.3);
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+     .career-hero p {
+        color: #ecf0f1; /* Lighter text for dark background */
+        max-width: 700px;
+        margin: 0 auto;
+        font-size: 1.1rem;
+     }
+
+    /* --- "Why Join Us" List Styling (similar to about page) --- */
+    .benefits-list { /* Renamed from why-us-list for semantics */
+      list-style: none;
+      padding-left: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .benefit-item { /* Renamed from why-us-item */
+      background-color: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      border-left: 4px solid #1DBFC1;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+     .benefit-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+     }
+
+    .benefit-item strong {
+      display: block;
+      color: #1DBFC1;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+     .benefit-item p {
+         font-size: 1rem;
+         margin-bottom: 0;
+         color: #444;
+     }
+
+    /* --- How to Apply Section --- */
+    .apply-section {
+      background-color: #e9f7fd; /* Light blue background */
+      text-align: center;
+      border-top: 3px solid #1DBFC1;
+    }
+    .apply-section .apply-email {
+        font-size: 1.1rem;
+        font-weight: bold;
+        word-break: break-all; /* Prevent long emails overflowing */
+    }
+
+
+    /* --- Animation --- */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* --- Responsiveness --- */
+    @media (max-width: 768px) {
+      .career-page h1 { font-size: 2rem; }
+      .career-page h2 { font-size: 1.5rem; }
+      .career-page p, .career-page ul { font-size: 1rem; }
+      .career-section { padding: 30px 20px; }
+      .career-hero { padding: 40px 15px; }
+    }
+
+     @media (max-width: 480px) {
+        .career-page h1 { font-size: 1.8rem; }
+        .career-page h2 { font-size: 1.3rem; }
+        .benefits-list { grid-template-columns: 1fr; }
+        .career-section { padding: 25px 15px; }
+     }
+
+  </style>
+{{end}}
+
+{{define "content"}}
+  <div class="career-page">
+    <div class="career-container">
+
+      <!-- Hero Section -->
+      <section class="career-hero">
+        <h1>Join Our Team</h1>
+        <p>
+          Help us build the future of free and accessible online classifieds in India. Be part of a growing platform that connects communities.
+        </p>
+      </section>
+
+      <!-- Our Work Culture Section -->
+      <section class="career-section culture-section">
+        <h2>Our Work Culture</h2>
+        <p>
+          At EasyToList, we foster a dynamic, collaborative, and user-centric environment. We believe in innovation, transparency, and empowering our team members to make a real impact. As a platform committed to being completely free for users, our work is driven by the goal of creating value and accessibility for everyone.
+        </p>
+        <p>
+          We are passionate about solving challenges and building a product that simplifies buying and selling across India.
+        </p>
+      </section>
+
+      <!-- Why Work With Us Section -->
+      <section class="career-section why-join-section">
+        <h2>Why Work With Us?</h2>
+        <ul class="benefits-list">
+          <li class="benefit-item">
+            <strong>Make a Real Impact</strong>
+            <p>Contribute directly to a platform used by a growing community across India, making transactions easier and free.</p>
+          </li>
+          <li class="benefit-item">
+            <strong>Learning & Growth</strong>
+            <p>Opportunities to learn new skills, tackle diverse challenges, and grow professionally in a fast-paced environment.</p>
+          </li>
+          <li class="benefit-item">
+            <strong>Collaborative Team</strong>
+            <p>Work alongside passionate and dedicated individuals who support each other.</p>
+          </li>
+          <li class="benefit-item">
+            <strong>Innovation Driven</strong>
+            <p>We encourage new ideas and creative solutions to continuously improve our platform.</p>
+          </li>
+           <li class="benefit-item">
+            <strong>Remote Flexibility</strong> <!-- (Optional: Remove if not applicable) -->
+            <p>We offer flexible working arrangements to support work-life balance.</p>
+          </li>
+           <li class="benefit-item">
+            <strong>Be Part of the Story</strong>
+            <p>Join us in the early stages and help shape the future of EasyToList.</p>
+          </li>
+        </ul>
+      </section>
+
+      <!-- How to Apply Section -->
+      <section class="career-section apply-section">
+        <h2>How to Apply</h2>
+        <p>
+          We are always on the lookout for talented and passionate individuals to join our journey. While we may not have specific openings listed right now, we encourage you to reach out if you believe your skills align with our mission.
+        </p>
+        <p>
+          Please send your resume and a brief cover letter explaining why you'd be a great fit for EasyToList to:
+        </p>
+        <p>
+          <a href="mailto:easytolist5@gmail.com" class="apply-email">easytolist5@gmail.com</a>
+        </p>
+        <p>
+          We look forward to hearing from you!
+        </p>
+      </section>
+
+    </div><!-- End of career-container -->
+  </div><!-- End of career-page -->
+{{end}}

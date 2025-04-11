@@ -1,23 +1,31 @@
 {{define "category_browse"}}
 
-<section class="category-browse-section">
-    <h2>Browse by Category</h2>
-    <div class="category-grid" id="categoryGrid">
-      <!-- JavaScript will populate this -->
-    </div>
-    <div class="subcategory-container" id="subcategoryContainer">
-      <!-- JavaScript will manage content here -->
-    </div>
-</section>
-<!-- Container for Category Browse RESULTS (Populated by JS when subcategory clicked) -->
-<div class="category-results-container" id="categoryResultsContainer" style="display: none;">
-    <h2 id="categoryResultsHeading"></h2>
-    <section class="ads-grid category-ads-grid" id="categoryAdsGrid">
-      <!-- JavaScript will populate this -->
-    </section>
-    <div class="pagination-container" style="text-align: center; margin: 20px 0;">
-      <button id="categoryShowMoreBtn" class="show-more-btn" style="display: none; padding: 10px 20px; font-size: 16px; background-color: #1DBFC1; color: white; border: none; border-radius: 25px; cursor: pointer; transition: background-color 0.3s ease;">Show More</button>
-    </div>
-</div>
-{{end}}
+<section class="category-browse-section" style="display: none;"> <!-- Hide initially, JS will show if setup succeeds -->
+  <h2>Browse by Category</h2>
 
+  <!-- Container where JS will create .category-wrapper elements -->
+  <!-- THIS MUST BE EMPTY INITIALLY -->
+  <div class="category-grid" id="categoryGrid">
+      <!--
+        JavaScript will populate this area dynamically.
+        Leave this div completely empty in the HTML template file.
+       -->
+  </div>
+  <!-- End of category grid -->
+
+</section> <!-- End of category browse section -->
+
+
+<!-- Container for displaying ADS based on selected subcategory (This part is correct) -->
+<div class="category-results-container" id="categoryResultsContainer" style="display: none;">
+  <h2 id="categoryResultsHeading"></h2> <!-- Heading will be updated by JS -->
+  <section class="ads-grid category-ads-grid" id="categoryAdsGrid">
+    <!-- Ads fetched via fetchCategoryAds will be populated here -->
+  </section>
+  <div class="pagination-container" style="text-align: center; margin: 20px 0;">
+    <!-- "Show More" button for the category results -->
+    <button id="categoryShowMoreBtn" class="show-more-btn" style="display: none;">Show More</button>
+  </div>
+</div> <!-- End of category results container -->
+
+{{end}}

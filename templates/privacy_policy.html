@@ -1,0 +1,246 @@
+{{/* templates/privacy_policy.html */}}
+
+{{define "title"}}Privacy Policy - EasyToList{{end}}
+
+{{define "head_extra"}}
+  {{/* Reusing similar styles, adapted for privacy policy page */}}
+  <style>
+    /* --- General Page Styles --- */
+    .privacy-page {
+      background-color: #f8f9fa;
+      padding: 40px 0;
+      overflow-x: hidden;
+    }
+
+    .privacy-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* --- Section Styling --- */
+    .privacy-section {
+      background-color: #ffffff;
+      padding: 30px 30px; /* Slightly less padding than other pages */
+      margin-bottom: 30px;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    /* Stagger animation */
+    .privacy-section:nth-child(1) { animation-delay: 0.1s; }
+    .privacy-section:nth-child(2) { animation-delay: 0.15s; }
+    .privacy-section:nth-child(3) { animation-delay: 0.2s; }
+    .privacy-section:nth-child(4) { animation-delay: 0.25s; }
+    .privacy-section:nth-child(5) { animation-delay: 0.3s; }
+    .privacy-section:nth-child(6) { animation-delay: 0.35s; }
+    .privacy-section:nth-child(7) { animation-delay: 0.4s; }
+    .privacy-section:nth-child(8) { animation-delay: 0.45s; }
+    .privacy-section:nth-child(9) { animation-delay: 0.5s; }
+
+
+    /* --- Typography --- */
+    .privacy-page h1, .privacy-page h2 {
+      font-family: 'Arial', sans-serif;
+      color: #1DBFC1;
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+    }
+
+    .privacy-page h1 {
+      font-size: 2.2rem; /* Slightly smaller H1 for policy */
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+     .privacy-page h2 {
+      font-size: 1.6rem; /* Smaller H2 */
+      border-bottom: 2px solid #e0e0e0;
+      padding-bottom: 0.5rem;
+      margin-top: 2rem; /* Add space above H2 */
+    }
+     .privacy-section:first-of-type h2 {
+        margin-top: 0; /* No top margin for the first H2 */
+     }
+
+
+    .privacy-page p, .privacy-page ul {
+      font-family: 'Arial', sans-serif;
+      line-height: 1.7;
+      color: #555;
+      font-size: 1rem; /* Standard text size */
+      margin-bottom: 1rem;
+    }
+     .privacy-page ul {
+        list-style: disc;
+        margin-left: 20px;
+        padding-left: 15px;
+     }
+      .privacy-page ul li {
+        margin-bottom: 0.5rem;
+      }
+
+    .privacy-page p strong {
+        color: #333;
+        font-weight: 600;
+    }
+
+    .privacy-page a {
+      color: #1DBFC1;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+    .privacy-page a:hover {
+      color: #148f91;
+      text-decoration: underline;
+    }
+
+    .effective-date {
+        text-align: center;
+        color: #777;
+        font-style: italic;
+        margin-bottom: 30px;
+    }
+
+    /* --- Animation --- */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* --- Responsiveness --- */
+    @media (max-width: 768px) {
+      .privacy-page h1 { font-size: 1.8rem; }
+      .privacy-page h2 { font-size: 1.4rem; }
+      .privacy-page p, .privacy-page ul { font-size: 0.95rem; }
+      .privacy-section { padding: 25px 20px; }
+    }
+
+     @media (max-width: 480px) {
+        .privacy-page h1 { font-size: 1.6rem; }
+        .privacy-page h2 { font-size: 1.2rem; }
+        .privacy-section { padding: 20px 15px; }
+     }
+
+  </style>
+{{end}}
+
+{{define "content"}}
+  <div class="privacy-page">
+    <div class="privacy-container">
+
+      <h1>Privacy Policy</h1>
+
+      <section class="privacy-section intro-section">
+        <p>
+          Welcome to EasyToList! This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our services. Please read this privacy policy carefully. If you do not agree with the terms of this privacy policy, please do not access the site.
+        </p>
+        <p>
+          We are committed to protecting your privacy and ensuring that your personal information is handled in a safe and responsible manner. EasyToList is a completely free classifieds platform based in India.
+        </p>
+      </section>
+
+      <section class="privacy-section info-collected-section">
+        <h2>Information We Collect</h2>
+        <p>We may collect information about you in a variety of ways. The information we may collect on the Site includes:</p>
+        <ul>
+          <li>
+            <strong>Personal Data:</strong> Personally identifiable information, such as your name and email address, that you voluntarily give to us when you register with the Site or when you choose to participate in various activities related to the Site, such as posting ads or sending messages. Your password is securely hashed and never stored in plain text.
+          </li>
+          <li>
+            <strong>Ad Data:</strong> Information you provide when posting an ad, including title, description, category, price, images, and location details (city, state, pincode, and potentially geographical coordinates if provided or derived).
+          </li>
+          <li>
+            <strong>Communication Data:</strong> Messages you send and receive through our platform's chat feature when communicating with other users about ads.
+          </li>
+          <li>
+            <strong>Derivative Data:</strong> Information our servers automatically collect when you access the Site, such as your IP address, browser type, operating system, access times, and the pages you have viewed directly before and after accessing the Site. (We primarily use this for security and analytics).
+          </li>
+           <li>
+            <strong>Contact Form Data:</strong> If you use the contact form in our footer, we collect the name, email address, and message you provide to respond to your inquiry.
+          </li>
+        </ul>
+      </section>
+
+      <section class="privacy-section info-use-section">
+        <h2>How We Use Your Information</h2>
+        <p>Having accurate information about you permits us to provide you with a smooth, efficient, and customized experience. Specifically, we may use information collected about you via the Site to:</p>
+        <ul>
+          <li>Create and manage your account.</li>
+          <li>Display your classified ads to other users.</li>
+          <li>Facilitate communication between users regarding ads via our platform.</li>
+          <li>Email you regarding your account, verification, or password resets.</li>
+          <li>Respond to your inquiries submitted via the contact form.</li>
+          <li>Monitor and analyze usage and trends to improve your experience with the Site.</li>
+          <li>Prevent fraudulent transactions, monitor against theft, and protect against criminal activity.</li>
+          <li>Comply with legal and regulatory requirements.</li>
+        </ul>
+      </section>
+
+       <section class="privacy-section info-sharing-section">
+        <h2>Disclosure of Your Information</h2>
+        <p>We value your privacy and limit the sharing of your information. We may share information we have collected about you in certain situations:</p>
+        <ul>
+            <li>
+                <strong>Public Ad Information:</strong> Information you include in your ad listing (title, description, price, category, general location like city/state, images) is publicly visible to users of the Site. We do <strong>not</strong> publicly display your email address or full name directly on the ad listing.
+            </li>
+             <li>
+                <strong>User Communications:</strong> When you communicate with another user via our platform's messaging system, your username (which may be your registered name) might be visible to the other user in the chat interface.
+            </li>
+            <li>
+                <strong>By Law or to Protect Rights:</strong> If we believe the release of information about you is necessary to respond to legal process, to investigate or remedy potential violations of our policies, or to protect the rights, property, and safety of others, we may share your information as permitted or required by any applicable law, rule, or regulation.
+            </li>
+            <li>
+                <strong>Third-Party Service Providers:</strong> We may share your information with third parties that perform services for us or on our behalf, including data analysis, email delivery, hosting services, and customer service. These providers have access only to the information necessary to perform their functions and are obligated to maintain the confidentiality and security of that information. (Currently, this primarily includes hosting and email services like Google SMTP).
+            </li>
+             <li>
+                <strong>Business Transfers:</strong> We may share or transfer your information in connection with, or during negotiations of, any merger, sale of company assets, financing, or acquisition of all or a portion of our business to another company. You will be notified via email and/or a prominent notice on our Site of any change in ownership or uses of your personal information.
+            </li>
+        </ul>
+         <p>We do not sell your personal information to third parties.</p>
+      </section>
+
+       <section class="privacy-section security-section">
+        <h2>Security of Your Information</h2>
+        <p>We use administrative, technical, and physical security measures to help protect your personal information. We hash passwords, utilize HTTPS for secure connections (ensure your server is configured for HTTPS), and implement other reasonable security practices. While we have taken reasonable steps to secure the personal information you provide to us, please be aware that despite our efforts, no security measures are perfect or impenetrable, and no method of data transmission can be guaranteed against any interception or other type of misuse.</p>
+      </section>
+
+       <section class="privacy-section retention-section">
+        <h2>Data Retention</h2>
+        <p>We will retain your personal information only for as long as is necessary for the purposes set out in this Privacy Policy, including for the duration your account is active or as needed to provide you services. We will retain and use your information to the extent necessary to comply with our legal obligations (for example, if we are required to retain your data to comply with applicable laws), resolve disputes, and enforce our legal agreements and policies.</p>
+        <p>Ad data and associated messages may be deleted when an ad is deleted by the user or after a certain period of inactivity, subject to our internal policies.</p>
+      </section>
+
+      <section class="privacy-section rights-section">
+        <h2>Your Rights</h2>
+        <p>Depending on your location, you may have certain rights regarding your personal information. You generally have the right to:</p>
+         <ul>
+            <li>Access and review the personal information you have provided to us through your account settings.</li>
+            <li>Update or correct inaccuracies in your personal information through your account settings.</li>
+            <li>Delete your ads or your entire account (subject to our data retention policies and legal obligations).</li>
+         </ul>
+         <p>To exercise these rights, please log in to your account or contact us using the contact information provided below.</p>
+      </section>
+
+      <section class="privacy-section children-section">
+        <h2>Policy for Children</h2>
+        <p>We do not knowingly solicit information from or market to children under the age of 13 (or applicable age in your jurisdiction). If we learn that we have collected personal information from a child under the relevant age without verification of parental consent, we will take steps to delete that information as quickly as possible. If you believe we might have any information from or about a child under the relevant age, please contact us.</p>
+      </section>
+
+      <section class="privacy-section changes-section">
+        <h2>Changes to This Privacy Policy</h2>
+        <p>We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Effective Date" at the top. You are advised to review this Privacy Policy periodically for any changes. Changes to this Privacy Policy are effective when they are posted on this page.</p>
+      </section>
+
+      <section class="privacy-section contact-section">
+        <h2>Contact Us</h2>
+        <p>If you have questions or comments about this Privacy Policy, please contact us at:</p>
+        <p><a href="mailto:easytolist5@gmail.com">easytolist5@gmail.com</a></p>
+      </section>
+
+    </div><!-- End of privacy-container -->
+  </div><!-- End of privacy-page -->
+{{end}}

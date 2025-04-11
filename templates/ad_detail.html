@@ -1,18 +1,29 @@
 {{/* Extends the base layout */}}
+{{/* Yeh line batati hai ki yeh file 'base.html' ka structure use karegi. Isse header, footer, base CSS/JS sab 'base.html' se aayenge. */}}
 {{template "base" .}}
 
 {{/* Define the title for the ad detail page */}}
+{{/* Yeh 'base.html' ke title block ko is page ke specific title se replace karega. */}}
 {{define "title"}}EasyToList - {{.Ad.Title}}{{end}}
 
 {{/* Define page-specific head elements */}}
+{{/* Yeh block 'base.html' ke andar <head> section mein ek placeholder (jiska naam "head_extra" hoga) mein inject hoga. */}}
 {{define "head_extra"}}
+    {{/* === YEH LINE BAHUT IMPORTANT HAI === */}}
+    {{/* Yeh line specific is page ke content (image gallery, details, chat button) ko style karne ke liye ad_detail.css file ko load karti hai. Yeh YAHIN rehni chahiye. */}}
     <link rel="stylesheet" href="/static/ad_detail.css">
+    {{/* Yahan aap is page ke liye koi aur specific <meta> tag ya <link> tag daal sakte hain. */}}
     <!-- Add any other meta tags or CSS needed ONLY for ad_detail -->
 {{end}}
 
 {{/* Define the main content for the ad detail page */}}
+{{/* Yeh block 'base.html' ke main content area (jiska naam "content" hoga) ko is page ke HTML se replace karega. */}}
 {{define "content"}}
 <main class="ad-detail-container" data-ad-id="{{.Ad.ID}}" data-seller-id="{{.Ad.SellerID}}">
+    {{/* --- BAAKI SAARA HTML CODE BILKUL SAHI HAI --- */}}
+    {{/* Yeh poora structure (image-gallery, ad-details, chat button, chat box) is page ka unique content hai. */}}
+    {{/* Is content ko styling `ad_detail.css` se milegi jo humne upar "head_extra" mein link kiya hai. */}}
+    
     <div class="image-gallery">
         <div class="main-image">
             {{ if .Ad.Images }}
@@ -58,6 +69,7 @@
 
 
 {{/* Define page-specific scripts (if any, beyond the base script) */}}
+{{/* Yeh block 'base.html' mein scripts ke liye bane placeholder (naam "scripts_extra") mein inject hoga. */}}
 {{define "scripts_extra"}}
     <!-- The main script is already in base.html and includes ad detail logic -->
     <!-- Add any scripts ONLY needed for the ad_detail page here -->

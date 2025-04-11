@@ -1,101 +1,104 @@
+{{/* Use base.html for the overall layout (header/footer included there) */}}
 {{template "base.html" .}}
 
+{{/* Define the page title */}}
 {{define "title"}}Post Your Ad - EasyToList{{end}}
 
+{{/* Define extra elements for the <head> section */}}
 {{define "head_extra"}}
-<!-- Include Choices.js CSS and local stylesheet -->
+<!-- Include Choices.js CSS for dropdowns -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+<!-- Include the CSS specific to this page's form -->
 <link rel="stylesheet" href="/static/post_ad.css">
 {{end}}
 
+{{/* Define the main content area for this page */}}
 {{define "content"}}
 
-<!-- Main container for Post Ad form -->
+<!-- Main container for the Post Ad form -->
 <div class="container">
-<h1>Post Ad</h1>
-<form id="postForm" enctype="multipart/form-data" method="POST">
+    {{/* Heading updated with spans for specific word styling */}}
+    <h1><span class="h1-post">Post</span> <span class="h1-ad">Ad</span></h1>
+    
+    {{/* The form structure remains unchanged */}}
+    <form id="postForm" enctype="multipart/form-data" method="POST">
 
-<!-- 1. Title Input Field -->
-<div class="form-group">
-<label>Title:</label>
-<input type="text" name="title" required>
-</div>
+        <!-- 1. Title Input Field -->
+        <div class="form-group">
+            <label>Title:</label>
+            <input type="text" name="title" required>
+        </div>
 
-<!-- 2. Category & Subcategory Section -->
-<div class="form-group">
-<label>Category:</label>
-<!-- The placeholder for Category is managed by Choices.js based on the first option -->
-<select name="category" id="category" class="custom-select" required>
-<option value="" disabled selected>Category</option> <!-- Placeholder -->
-<option value="mobile">Mobile & Accessories</option>
-<option value="jobs">Jobs</option>
-<option value="real_estate">Real Estate</option>
-<option value="vehicle">Vehicles</option>
-<option value="electronics">Electronics & Appliances</option>
-<option value="education">Education & Training</option>
-<option value="personal">Personal & Dating</option>
-<option value="home">Home & Furniture</option>
-<option value="fashion">Fashion & Beauty</option>
-<option value="services">Services</option>
-<option value="pets">Pets & Animals</option>
-<option value="sports">Sports, Hobbies & Books</option>
-<option value="kids">Kids & Babies</option>
-<option value="agriculture">Agriculture & Farming</option>
-<option value="business">Business & Industrial</option>
-</select>
-</div>
+        <!-- 2. Category & Subcategory Section -->
+        <div class="form-group">
+            <label>Category:</label>
+            <select name="category" id="category" class="custom-select" required>
+                <option value="" disabled selected>Category</option>
+                <option value="mobile">Mobile & Accessories</option>
+                <option value="jobs">Jobs</option>
+                <option value="real_estate">Real Estate</option>
+                <option value="vehicle">Vehicles</option>
+                <option value="electronics">Electronics & Appliances</option>
+                <option value="education">Education & Training</option>
+                <option value="personal">Personal & Dating</option>
+                <option value="home">Home & Furniture</option>
+                <option value="fashion">Fashion & Beauty</option>
+                <option value="services">Services</option>
+                <option value="pets">Pets & Animals</option>
+                <option value="sports">Sports, Hobbies & Books</option>
+                <option value="kids">Kids & Babies</option>
+                <option value="agriculture">Agriculture & Farming</option>
+                <option value="business">Business & Industrial</option>
+            </select>
+        </div>
 
-<!-- Subcategory Field (Initially disabled) -->
-<div class="form-group">
-<label>Subcategory:</label>
-<!-- Placeholder text updated by JavaScript -->
-<select name="subcategory" id="subcategory" class="custom-select" disabled>
-<option value="" selected>Select Category First</option> <!-- Initial placeholder -->
-</select>
-</div>
+        <!-- Subcategory Field (Initially disabled) -->
+        <div class="form-group">
+            <label>Subcategory:</label>
+            <select name="subcategory" id="subcategory" class="custom-select" disabled>
+                <option value="" selected>Select Category First</option>
+            </select>
+        </div>
 
-<!-- 3. Description Field -->
-<div class="form-group">
-<label>Description:</label>
-<textarea name="description" required></textarea>
-</div>
+        <!-- 3. Description Field -->
+        <div class="form-group">
+            <label>Description:</label>
+            <textarea name="description" required></textarea>
+        </div>
 
-<!-- 4. Price Field -->
-<div class="form-group">
-<label>Price:</label>
-<input type="number" step="0.01" name="price" required>
-</div>
+        <!-- 4. Price Field -->
+        <div class="form-group">
+            <label>Price:</label>
+            <input type="number" step="0.01" name="price" required>
+        </div>
 
-<!-- 5. Location Fields and Get Location Button -->
-<div class="form-group">
-<label>Location:
-<!-- Button to trigger location fetch -->
-<button type="button" id="getLocation">
-<img src="/static/locationicon.png" alt="Get Location" class="location-icon">
-</button>
-</label>
-<!-- Container for City, State, and Pincode fields -->
-<div class="location-fields">
-<input type="text" name="city" placeholder="City" required>
-<input type="text" name="state" placeholder="State" required>
-<input type="text" name="pincode" placeholder="Pincode" required>
-</div>
-<!-- Hidden fields for storing coordinates and edit status -->
-<input type="hidden" name="lat" id="hiddenLat">
-<input type="hidden" name="lng" id="hiddenLng">
-<input type="hidden" name="isEdited" id="isEdited" value="false">
-</div>
+        <!-- 5. Location Fields and Get Location Button -->
+        <div class="form-group">
+            <label>Location:
+                <button type="button" id="getLocation">
+                    <img src="/static/locationicon.png" alt="Get Location" class="location-icon">
+                </button>
+            </label>
+            <div class="location-fields">
+                <input type="text" name="city" placeholder="City" required>
+                <input type="text" name="state" placeholder="State" required>
+                <input type="text" name="pincode" placeholder="Pincode" required>
+            </div>
+            <input type="hidden" name="lat" id="hiddenLat">
+            <input type="hidden" name="lng" id="hiddenLng">
+            <input type="hidden" name="isEdited" id="isEdited" value="false">
+        </div>
 
-<!-- 6. Image Upload Section (Maximum 5 images) -->
-<div class="form-group">
-<label>Images (Max 5):</label>
-<input type="file" name="images" multiple accept="image/*" id="imageInput">
-<div class="image-preview" id="imagePreview"></div>
-</div>
+        <!-- 6. Image Upload Section (Maximum 5 images) -->
+        <div class="form-group">
+            <label>Images (Max 5):</label>
+            <input type="file" name="images" multiple accept="image/*" id="imageInput">
+            <div class="image-preview" id="imagePreview"></div>
+        </div>
 
-<!-- Submit Button -->
-<button type="submit">Post Ad</button>
-</form>
+        <!-- Submit Button -->
+        <button type="submit">Post Ad</button>
+    </form>
 </div>
 {{end}}
 

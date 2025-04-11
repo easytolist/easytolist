@@ -41,6 +41,7 @@
         {{ template "category_browse" . }}
     {{ end }}
     {{ end }}
+
     <!-- Main Content Block - Page specific templates fill this -->
     {{ block "content" . }}
         <!-- Default content if a page doesn't define this block -->
@@ -89,7 +90,7 @@
     let currentFilterPage = 1;
     let currentFilterParams = null;
     let categoryCurrentPage = 1;
-    let currentSubcategoryFilter = null;
+    let currentSubcategoryFilter = null; // Stores { category: '...', subcategory: '...' }
 
     /********************************************************
      *                                                      *
@@ -130,7 +131,7 @@
     function updateAdsGrid(ads) {
       const mainAdsGrid = document.querySelector('main.container > section.ads-grid'); const mainShowMoreBtn = document.getElementById('showMoreBtn'); const categoryResultsContainer = document.getElementById('categoryResultsContainer');
       if (!mainAdsGrid) { console.warn("Main ads grid not found on this page for update."); return; } // Use warn, not error
-      if (categoryResultsContainer) categoryResultsContainer.style.display = 'none';
+      if (categoryResultsContainer) categoryResultsContainer.style.display = 'none'; // Hide category results when main grid updates
       mainAdsGrid.innerHTML = '';
       if (!ads || ads.length === 0) { mainAdsGrid.innerHTML = '<p style="text-align: center; grid-column: 1 / -1;">No ads found matching your criteria.</p>'; if (mainShowMoreBtn) mainShowMoreBtn.style.display = 'none'; return; }
       ads.forEach(ad => { const adCard = createAdCard(ad); mainAdsGrid.appendChild(adCard); setupCarousel(adCard.querySelector('.carousel')); });
@@ -160,111 +161,101 @@
       });
     }
 
-    // In base.html <script> block
+    // Function to handle location logic (Used by Search and potentially Categories on load)
+    function handleLocationLogic(showAlerts = true) {
+        const latInput = document.getElementById('latInput');
+        const lngInput = document.getElementById('lngInput');
+        const stateInput = document.getElementById('stateInput');
+        const pincodeInput = document.getElementById('pincodeInput');
+        const loadingOverlay = document.getElementById('loadingOverlay');
 
-// Function to handle location logic (Used by Search and Categories)
-function handleLocationLogic(showAlerts = true) {
-    // Attempt to get all elements potentially used by this function
-    const latInput = document.getElementById('latInput');
-    const lngInput = document.getElementById('lngInput');
-    const stateInput = document.getElementById('stateInput');
-    const pincodeInput = document.getElementById('pincodeInput');
-    const loadingOverlay = document.getElementById('loadingOverlay'); // General overlay
-
-    // --- ADDED CHECK ---
-    // If the core input elements expected by *this specific function*
-    // (usually from the search bar/filter area) are not found,
-    // then this function shouldn't run on this page. Exit gracefully.
-    if (!latInput || !lngInput || !stateInput || !pincodeInput) {
-        // console.log("handleLocationLogic: Skipping execution as required search/category inputs (latInput, lngInput, stateInput, pincodeInput) were not found on this page."); // Optional: Uncomment for debugging
-        return; // Exit the function silently
-    }
-    // --- END ADDED CHECK ---
-
-    // If we reached here, the core input elements *were* found.
-    // Now, just ensure the loading overlay exists before proceeding.
-    if (!loadingOverlay) {
-        console.error("handleLocationLogic: The loadingOverlay element was not found, cannot proceed.");
-        return;
-    }
-
-    // --- Original Logic (Now only runs if inputs AND overlay were found) ---
-    if (navigator.geolocation) {
-        loadingOverlay.style.display = 'block';
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
-                // Safe to use these now because the check above passed
-                latInput.value = lat;
-                lngInput.value = lng;
-                console.log("Geolocation success. Lat:", lat, "Lng:", lng);
-
-                fetch(`/geocode?lat=${lat}&lng=${lng}`)
-                    .then(response => response.ok ? response.json() : response.text().then(text => Promise.reject(new Error(`Reverse geocode HTTP error! Status: ${response.status}. Response: ${text}`))))
-                    .then(data => {
-                        if (data.status === "OK" && data.state && data.pincode) {
-                            // Safe to use these now
-                            if (showAlerts || !stateInput.value) { stateInput.value = data.state; }
-                            if (showAlerts || !pincodeInput.value) { pincodeInput.value = data.pincode; }
-                            console.log("Reverse geocode success. State:", data.state, "Pincode:", data.pincode);
-                        } else {
-                            console.error("Reverse geocoding failed or missing data:", data);
-                            if (showAlerts) {
-                                // Safe to use these now
-                                stateInput.value = '';
-                                pincodeInput.value = '';
-                                alert("Could not determine State/Pincode from location.");
-                            }
-                        }
-                    })
-                    .catch(error => {
-                        console.error("Reverse geocoding fetch/processing error:", error);
-                        if (showAlerts) {
-                            // Safe to use these now
-                            stateInput.value = '';
-                            pincodeInput.value = '';
-                            alert(`Error determining State/Pincode: ${error.message}.`);
-                        }
-                    })
-                    .finally(() => {
-                        loadingOverlay.style.display = 'none';
-                    });
-            },
-            (error) => {
-                console.error("Error getting geolocation:", error.message, `(Code: ${error.code})`);
-                let msg = "Unable to get location.";
-                if (error.code === 1) { msg = "Location access denied."; }
-                else if (error.code === 2) { msg = "Location information unavailable."; }
-                else if (error.code === 3) { msg = "Location request timed out."; }
-
-                if (showAlerts) {
-                    alert(msg + " Please allow access or enter manually.");
-                } else {
-                    console.warn("Auto-fetch location failed:", msg);
-                }
-
-                // Clear inputs only if showing alerts (and inputs exist because check passed)
-                if (showAlerts) {
-                    latInput.value = '';
-                    lngInput.value = '';
-                    stateInput.value = '';
-                    pincodeInput.value = '';
-                }
-                loadingOverlay.style.display = 'none';
-            },
-            { timeout: 10000, enableHighAccuracy: true }
-        );
-    } else {
-        // Geolocation not supported
-        if (showAlerts) {
-            alert("Geolocation is not supported by this browser.");
-        } else {
-            console.warn("Geolocation not supported by browser.");
+        // Check if the necessary *input* elements for *this function's primary purpose* exist
+        // (Mainly for the search bar interaction)
+        if (!latInput || !lngInput || !stateInput || !pincodeInput) {
+            // console.log("handleLocationLogic: Skipping execution as required search/category inputs (latInput, lngInput, stateInput, pincodeInput) were not found on this page.");
+            return; // Exit silently if these specific inputs aren't there
         }
-        loadingOverlay.style.display = 'none'; // Ensure overlay is hidden
-    }
-} // End of handleLocationLogic function
+
+        // If inputs exist, ensure the loading overlay also exists
+        if (!loadingOverlay) {
+            console.error("handleLocationLogic: The loadingOverlay element was not found, cannot proceed.");
+            return;
+        }
+
+        // Proceed with geolocation if inputs and overlay are present
+        if (navigator.geolocation) {
+            loadingOverlay.style.display = 'block';
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    latInput.value = lat; // Safe to use now
+                    lngInput.value = lng; // Safe to use now
+                    console.log("Geolocation success. Lat:", lat, "Lng:", lng);
+
+                    fetch(`/geocode?lat=${lat}&lng=${lng}`)
+                        .then(response => response.ok ? response.json() : response.text().then(text => Promise.reject(new Error(`Reverse geocode HTTP error! Status: ${response.status}. Response: ${text}`))))
+                        .then(data => {
+                            if (data.status === "OK" && data.state && data.pincode) {
+                                // Only update if showing alerts OR if the field is currently empty
+                                if (showAlerts || !stateInput.value) { stateInput.value = data.state; } // Safe to use now
+                                if (showAlerts || !pincodeInput.value) { pincodeInput.value = data.pincode; } // Safe to use now
+                                console.log("Reverse geocode success. State:", data.state, "Pincode:", data.pincode);
+                            } else {
+                                console.error("Reverse geocoding failed or missing data:", data);
+                                if (showAlerts) {
+                                    stateInput.value = ''; // Safe to use now
+                                    pincodeInput.value = ''; // Safe to use now
+                                    alert("Could not determine State/Pincode from location.");
+                                }
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Reverse geocoding fetch/processing error:", error);
+                            if (showAlerts) {
+                                stateInput.value = ''; // Safe to use now
+                                pincodeInput.value = ''; // Safe to use now
+                                alert(`Error determining State/Pincode: ${error.message}.`);
+                            }
+                        })
+                        .finally(() => {
+                            loadingOverlay.style.display = 'none';
+                        });
+                },
+                (error) => {
+                    console.error("Error getting geolocation:", error.message, `(Code: ${error.code})`);
+                    let msg = "Unable to get location.";
+                    if (error.code === 1) { msg = "Location access denied."; }
+                    else if (error.code === 2) { msg = "Location information unavailable."; }
+                    else if (error.code === 3) { msg = "Location request timed out."; }
+
+                    if (showAlerts) {
+                        alert(msg + " Please allow access or enter manually.");
+                    } else {
+                        console.warn("Auto-fetch location failed:", msg);
+                    }
+
+                    // Clear inputs only if showing alerts (and inputs exist)
+                    if (showAlerts) {
+                        latInput.value = ''; // Safe to use now
+                        lngInput.value = ''; // Safe to use now
+                        stateInput.value = ''; // Safe to use now
+                        pincodeInput.value = ''; // Safe to use now
+                    }
+                    loadingOverlay.style.display = 'none';
+                },
+                { timeout: 10000, enableHighAccuracy: true }
+            );
+        } else {
+            if (showAlerts) {
+                alert("Geolocation is not supported by this browser.");
+            } else {
+                console.warn("Geolocation not supported by browser.");
+            }
+            loadingOverlay.style.display = 'none';
+        }
+    } // End of handleLocationLogic function
+
     /********************************************************
      *                                                      *
      *    CATEGORY/SUBCATEGORY RESULT HANDLING FUNCTIONS    *
@@ -272,43 +263,152 @@ function handleLocationLogic(showAlerts = true) {
      *                                                      *
      ********************************************************/
 
-    // Function to update the CATEGORY ads grid
+    // Function to update the CATEGORY ads grid (Populates #categoryAdsGrid)
     function updateCategoryAdsGrid(ads) {
-        const adsGrid = document.getElementById('categoryAdsGrid'); const showMoreBtn = document.getElementById('categoryShowMoreBtn'); const resultsContainer = document.getElementById('categoryResultsContainer'); const resultsHeading = document.getElementById('categoryResultsHeading');
-        if (!adsGrid || !showMoreBtn || !resultsContainer || !resultsHeading) { console.warn("One or more category results elements are missing on this page!"); return; } // Warn
-        adsGrid.innerHTML = ''; let subcatDisplay = currentSubcategoryFilter?.subcategory?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Selected Subcategory'; let catDisplay = currentSubcategoryFilter?.category?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Selected Category';
-        if (!ads || ads.length === 0) { adsGrid.innerHTML = '<p style="text-align: center; grid-column: 1 / -1; padding: 20px;">No ads found for this subcategory near you.</p>'; showMoreBtn.style.display = 'none'; resultsHeading.textContent = `No Results for ${subcatDisplay} in ${catDisplay}`; resultsContainer.style.display = 'block'; return; }
+        const adsGrid = document.getElementById('categoryAdsGrid');
+        const showMoreBtn = document.getElementById('categoryShowMoreBtn');
+        const resultsContainer = document.getElementById('categoryResultsContainer');
+        const resultsHeading = document.getElementById('categoryResultsHeading');
+        if (!adsGrid || !showMoreBtn || !resultsContainer || !resultsHeading) {
+            console.warn("One or more category results elements are missing on this page!");
+            return;
+        }
+        adsGrid.innerHTML = ''; // Clear previous ads
+        let subcatDisplay = currentSubcategoryFilter?.subcategory?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Selected Subcategory';
+        let catDisplay = currentSubcategoryFilter?.category?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Selected Category';
+
+        if (!ads || ads.length === 0) {
+            adsGrid.innerHTML = '<p style="text-align: center; grid-column: 1 / -1; padding: 20px;">No ads found for this subcategory near you.</p>';
+            showMoreBtn.style.display = 'none';
+            resultsHeading.textContent = `No Results for ${subcatDisplay} in ${catDisplay}`;
+            resultsContainer.style.display = 'block'; // Show the container even if no results
+            return;
+        }
+
         resultsHeading.textContent = `Showing Ads for ${subcatDisplay} in ${catDisplay}`;
-        ads.forEach(ad => { const adCard = createAdCard(ad); adsGrid.appendChild(adCard); setupCarousel(adCard.querySelector('.carousel')); });
-        resultsContainer.style.display = 'block';
-        showMoreBtn.style.display = (ads.length < CATEGORY_PAGE_SIZE) ? 'none' : 'inline-block'; showMoreBtn.disabled = false; showMoreBtn.textContent = 'Show More';
+        ads.forEach(ad => {
+            const adCard = createAdCard(ad);
+            adsGrid.appendChild(adCard);
+            setupCarousel(adCard.querySelector('.carousel')); // Setup carousel for new cards
+        });
+
+        resultsContainer.style.display = 'block'; // Show results container
+        // Show/hide "Show More" button based on results length
+        showMoreBtn.style.display = (ads.length < CATEGORY_PAGE_SIZE) ? 'none' : 'inline-block';
+        showMoreBtn.disabled = false;
+        showMoreBtn.textContent = 'Show More';
     }
 
-    // Function to append ads to the CATEGORY grid
+    // Function to append ads to the CATEGORY grid (Appends to #categoryAdsGrid)
     function appendCategoryAdsGrid(ads) {
-        const adsGrid = document.getElementById('categoryAdsGrid'); const showMoreBtn = document.getElementById('categoryShowMoreBtn');
-        if (!adsGrid || !showMoreBtn) { console.warn("Category grid or show more button missing for append on this page!"); return; } // Warn
-        if (!ads || ads.length === 0) { showMoreBtn.style.display = 'none'; return; }
-        ads.forEach(ad => { const adCard = createAdCard(ad); adsGrid.appendChild(adCard); setupCarousel(adCard.querySelector('.carousel')); });
-        showMoreBtn.style.display = (ads.length < CATEGORY_PAGE_SIZE) ? 'none' : 'inline-block'; showMoreBtn.disabled = false; showMoreBtn.textContent = 'Show More';
+        const adsGrid = document.getElementById('categoryAdsGrid');
+        const showMoreBtn = document.getElementById('categoryShowMoreBtn');
+        if (!adsGrid || !showMoreBtn) {
+            console.warn("Category grid or show more button missing for append on this page!");
+            return;
+        }
+        if (!ads || ads.length === 0) {
+            showMoreBtn.style.display = 'none'; // No more ads, hide button
+            return;
+        }
+        ads.forEach(ad => {
+            const adCard = createAdCard(ad);
+            adsGrid.appendChild(adCard);
+            setupCarousel(adCard.querySelector('.carousel')); // Setup carousel for appended cards
+        });
+        // Update "Show More" button visibility
+        showMoreBtn.style.display = (ads.length < CATEGORY_PAGE_SIZE) ? 'none' : 'inline-block';
+        showMoreBtn.disabled = false;
+        showMoreBtn.textContent = 'Show More';
     }
 
     // Function to fetch ads for a specific subcategory via /fetch-by-subcategory
     function fetchCategoryAds(category, subcategory, lat, lng, page) {
-        const showMoreBtn = document.getElementById('categoryShowMoreBtn'); const adsGrid = document.getElementById('categoryAdsGrid'); const loadingOverlay = document.getElementById('loadingOverlay'); const resultsContainer = document.getElementById('categoryResultsContainer'); const resultsHeading = document.getElementById('categoryResultsHeading');
-        if (!showMoreBtn || !adsGrid || !loadingOverlay || !resultsContainer || !resultsHeading) { console.warn("Missing required elements for fetchCategoryAds on this page"); return; } // Warn
-        if (!category || !subcategory) { console.error("Category or Subcategory missing for fetch."); resultsContainer.style.display = 'none'; return; }
-        if (!lat || !lng) { alert("Location (latitude/longitude) is required to search by subcategory.\nPlease allow location access or use the location icon."); resultsContainer.style.display = 'none'; return; }
+        const showMoreBtn = document.getElementById('categoryShowMoreBtn');
+        const adsGrid = document.getElementById('categoryAdsGrid');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const resultsContainer = document.getElementById('categoryResultsContainer');
+        const resultsHeading = document.getElementById('categoryResultsHeading');
+
+        // Ensure all required elements exist
+        if (!showMoreBtn || !adsGrid || !loadingOverlay || !resultsContainer || !resultsHeading) {
+            console.warn("Missing required elements for fetchCategoryAds on this page");
+            return;
+        }
+        // Validate inputs
+        if (!category || !subcategory) {
+            console.error("Category or Subcategory missing for fetch.");
+            resultsContainer.style.display = 'none'; // Hide potentially stale results
+            return;
+        }
+        if (!lat || !lng) {
+            // Alert the user if location is missing (it's required for subcategory search)
+            alert("Location (latitude/longitude) is required to search by subcategory.\nPlease allow location access or use the location icon in the search bar.");
+            resultsContainer.style.display = 'none';
+            return;
+        }
+
         console.log(`Fetching page ${page} for Cat: ${category}, Sub: ${subcategory}, Loc: ${lat},${lng}`);
-        loadingOverlay.style.display = 'block';
-        if (page === 1) { adsGrid.innerHTML = '<p style="text-align: center; grid-column: 1 / -1; padding: 20px;">Loading ads...</p>'; resultsHeading.textContent = 'Loading...'; resultsContainer.style.display = 'block'; showMoreBtn.style.display = 'none'; } else { showMoreBtn.textContent = 'Loading...'; showMoreBtn.disabled = true; }
+        loadingOverlay.style.display = 'block'; // Show loading overlay
+
+        // UI updates based on whether it's the first page load or "Show More"
+        if (page === 1) {
+            adsGrid.innerHTML = '<p style="text-align: center; grid-column: 1 / -1; padding: 20px;">Loading ads...</p>'; // Initial loading message
+            resultsHeading.textContent = 'Loading...';
+            resultsContainer.style.display = 'block'; // Show container immediately
+            showMoreBtn.style.display = 'none'; // Hide button initially
+        } else {
+            showMoreBtn.textContent = 'Loading...'; // Update button text for "Show More"
+            showMoreBtn.disabled = true;
+        }
+
         const fetchUrl = `/fetch-by-subcategory?category=${encodeURIComponent(category)}&subcategory=${encodeURIComponent(subcategory)}&lat=${lat}&lng=${lng}&page=${page}`;
+
         fetch(fetchUrl, { method: 'GET' })
-            .then(response => { if (!response.ok) { return response.text().then(text => { throw new Error(`Failed: ${response.statusText} (${response.status}). ${text || ''}`); }); } return response.json(); })
-            .then(newAds => { if (page === 1) { updateCategoryAdsGrid(newAds); } else { appendCategoryAdsGrid(newAds); } })
-            .catch(error => { console.error('Error fetching subcategory ads:', error); adsGrid.innerHTML = `<p style="text-align: center; color: red; grid-column: 1 / -1; padding: 20px;">Failed to load ads. ${error.message}</p>`; showMoreBtn.style.display = 'none'; resultsHeading.textContent = "Error Loading Ads"; resultsContainer.style.display = 'block'; })
-            .finally(() => { if (showMoreBtn.style.display !== 'none') { showMoreBtn.textContent = 'Show More'; showMoreBtn.disabled = false; } loadingOverlay.style.display = 'none'; if (page === 1 && adsGrid.querySelector('.ad-card')) { resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' }); } });
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(`Failed: ${response.statusText} (${response.status}). ${text || ''}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(newAds => {
+                // Call appropriate function based on page number
+                if (page === 1) {
+                    updateCategoryAdsGrid(newAds); // Replace content for page 1
+                } else {
+                    appendCategoryAdsGrid(newAds); // Append content for subsequent pages
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching subcategory ads:', error);
+                // Display error message in the grid
+                adsGrid.innerHTML = `<p style="text-align: center; color: red; grid-column: 1 / -1; padding: 20px;">Failed to load ads. ${error.message}</p>`;
+                showMoreBtn.style.display = 'none'; // Hide button on error
+                resultsHeading.textContent = "Error Loading Ads";
+                resultsContainer.style.display = 'block'; // Keep container visible to show error
+            })
+            .finally(() => {
+                // Reset "Show More" button state if it's still visible
+                if (showMoreBtn.style.display !== 'none') {
+                    showMoreBtn.textContent = 'Show More';
+                    showMoreBtn.disabled = false;
+                }
+                loadingOverlay.style.display = 'none'; // Hide loading overlay
+
+                // Scroll to results only on the *first* successful load
+                if (page === 1 && adsGrid.querySelector('.ad-card')) {
+                    resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+                }
+            });
     }
+
+
+    // --- Removed unused/redundant subcategory handling functions ---
+    // function toggleSubcategories(...) - Logic integrated into main click handler
+    // function createSubcategoryMarkup(...) - Logic integrated into main click handler
+    // function fetchSubcategoryAds(...) - Functionality covered by fetchCategoryAds
 
 
     /********************************************************
@@ -318,29 +418,45 @@ function handleLocationLogic(showAlerts = true) {
      *                                                      *
      ********************************************************/
 
-        // --- Ad Detail Page Specific Logic ---
-        function initializeAdDetail() {
+    // --- Ad Detail Page Specific Logic ---
+    function initializeAdDetail() {
         const adDetailContainer = document.querySelector('.ad-detail-container');
         if (!adDetailContainer) return; // Only run if we are on ad_detail page
 
         console.log("Initializing Ad Detail page specific features...");
 
-        // --- Image Gallery Logic (No changes needed here) ---
+        // --- Image Gallery Logic ---
         const mainImage = document.getElementById('mainImage');
         const thumbnails = document.querySelectorAll('.thumbnail');
         if (mainImage && thumbnails.length > 0) {
             console.log("Setting up image gallery...");
-            let currentMainImageSrc = mainImage.src.split('?')[0];
+            let currentMainImageSrc = mainImage.src.split('?')[0]; // Get base src without query params
             thumbnails.forEach(thumb => {
-                const thumbBaseSrc = thumb.dataset.src;
-                thumb.src = `${thumbBaseSrc}?t=${Date.now()}`; // Cache bust
+                const thumbBaseSrc = thumb.dataset.src; // Get base src from data attribute
+                thumb.src = `${thumbBaseSrc}?t=${Date.now()}`; // Add timestamp for cache busting on load
+
                 thumb.addEventListener('click', function() {
-                    const newSrcBase = this.dataset.src;
+                    const newSrcBase = this.dataset.src; // Base src of clicked thumbnail
+                    // Avoid reloading the same image
                     if (currentMainImageSrc === newSrcBase) return;
-                    mainImage.style.transition = 'opacity 0.3s ease-in-out'; mainImage.style.opacity = 0.5;
-                    const newTimestampedSrc = `${newSrcBase}?t=${Date.now()}`; mainImage.src = newTimestampedSrc; currentMainImageSrc = newSrcBase;
-                    thumbnails.forEach(t => t.classList.remove('active')); this.classList.add('active');
-                    mainImage.onload = () => { mainImage.style.opacity = 1; }; mainImage.onerror = () => { mainImage.style.opacity = 1; console.error("Failed to load image:", newTimestampedSrc); };
+
+                    // Fade out effect
+                    mainImage.style.transition = 'opacity 0.3s ease-in-out';
+                    mainImage.style.opacity = 0.5;
+
+                    // Update src with new timestamp and update tracked base src
+                    const newTimestampedSrc = `${newSrcBase}?t=${Date.now()}`;
+                    mainImage.src = newTimestampedSrc;
+                    currentMainImageSrc = newSrcBase;
+
+                    // Update active thumbnail style
+                    thumbnails.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+
+                    // Fade in when loaded (or handle error)
+                    mainImage.onload = () => { mainImage.style.opacity = 1; };
+                    mainImage.onerror = () => { mainImage.style.opacity = 1; console.error("Failed to load image:", newTimestampedSrc); };
+                    // Fallback opacity reset in case onload doesn't fire quickly
                     setTimeout(() => { mainImage.style.opacity = 1; }, 400);
                 });
             });
@@ -353,110 +469,241 @@ function handleLocationLogic(showAlerts = true) {
         const adIDStr = adDetailContainer?.dataset?.adId;
         const sellerID = parseInt(sellerIDStr, 10);
         const adID = parseInt(adIDStr, 10);
-        var socket = null;
-        var canChat = true;
+        var socket = null; // WebSocket connection
+        var canChat = true; // Flag to enable/disable chat functionality
+
+        // Get chat UI elements
         const chatButtonElement = document.getElementById('chatButton');
         const chatBoxElement = document.getElementById('chatBox');
         const messageInputElement = document.getElementById('messageInput');
         const messagesDivElement = document.getElementById('messages');
         const sellerStatusElement = document.getElementById('sellerStatus');
 
-
         // --- Define Helper Functions (Local Scope) ---
-        // These are only called by other JS within this block
+
         function openChat() {
             if (!canChat || !chatBoxElement) return;
             chatBoxElement.style.display = "block";
-            if (!socket || socket.readyState === WebSocket.CLOSED) {
-                const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://"; const wsURL = wsProtocol + window.location.host + "/ws"; console.log("Connecting to WebSocket:", wsURL);
-                try { socket = new WebSocket(wsURL); } catch (e) { console.error("WebSocket connection error:", e); alert("Could not establish chat connection."); chatBoxElement.style.display = "none"; return; }
-                socket.onopen = function() { console.log("WebSocket connected"); /* fetchConversationHistory(); */ };
-                socket.onmessage = function(event) {
-                    console.log("WebSocket message received:", event.data);
-                    try {
-                        var data = JSON.parse(event.data);
-                        if (data.type === "notification") { console.log("Notification:", data.message); return; }
-                        if (data.ad_id === adID && messagesDivElement) {
-                            var msgElem = document.createElement("div"); msgElem.style.marginBottom = '8px'; msgElem.style.padding = '6px 10px'; msgElem.style.borderRadius = '8px'; msgElem.style.maxWidth = '85%'; msgElem.style.wordWrap = 'break-word'; msgElem.style.clear = 'both'; msgElem.style.fontSize = '0.9rem';
-                            const messageTime = new Date(data.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                            if (data.sender_id === sellerID) { msgElem.textContent = data.message; msgElem.style.background = '#e4e6eb'; msgElem.style.color = '#050505'; msgElem.style.float = 'left'; msgElem.setAttribute('title', `Seller - ${messageTime}`); }
-                            else { msgElem.textContent = data.message; msgElem.style.background = '#1DBFC1'; msgElem.style.color = 'white'; msgElem.style.float = 'right'; msgElem.setAttribute('title', `You - ${messageTime}`); }
-                            messagesDivElement.appendChild(msgElem); messagesDivElement.scrollTop = messagesDivElement.scrollHeight;
-                        } else { console.log("Received message for different ad or messagesDiv missing:", data.ad_id); }
-                    } catch (e) { console.error("Failed to parse WebSocket message:", e, event.data); }
-                };
-                socket.onerror = function(error) { console.error("WebSocket Error:", error); };
-                socket.onclose = function(event) { console.log("WebSocket closed:", event.code, event.reason); socket = null; };
-            } else if (socket.readyState === WebSocket.CONNECTING) { console.log("WebSocket is still connecting..."); }
-            else if (socket.readyState === WebSocket.OPEN) { console.log("WebSocket already open."); /* fetchConversationHistory(); */ }
+
+            // Establish WebSocket connection if not already open or connecting
+            if (!socket || socket.readyState === WebSocket.CLOSED || socket.readyState === WebSocket.CLOSING) {
+                const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+                const wsURL = wsProtocol + window.location.host + "/ws";
+                console.log("Connecting to WebSocket:", wsURL);
+
+                try {
+                    socket = new WebSocket(wsURL);
+
+                    socket.onopen = function() {
+                        console.log("WebSocket connected");
+                        // Optional: fetch conversation history upon opening
+                        // fetchConversationHistory();
+                        if (sellerStatusElement) fetchUserStatus(sellerID); // Check status on connect
+                    };
+
+                    socket.onmessage = function(event) {
+                        console.log("WebSocket message received:", event.data);
+                        try {
+                            var data = JSON.parse(event.data);
+
+                            // Handle different message types
+                            if (data.type === "notification") {
+                                console.log("Notification:", data.message);
+                                // Potentially update UI based on notification, e.g., user status change
+                                if (data.event === "user_status_update" && data.user_id === sellerID && sellerStatusElement) {
+                                    sellerStatusElement.textContent = data.online ? "Seller Online" : "Seller Offline";
+                                    sellerStatusElement.style.color = data.online ? '#ffffff' : '#dcedff'; // Match existing colors
+                                }
+                                return;
+                            }
+
+                            // Process chat messages relevant to this ad
+                            if (data.ad_id === adID && messagesDivElement) {
+                                var msgElem = document.createElement("div");
+                                msgElem.style.marginBottom = '8px';
+                                msgElem.style.padding = '6px 10px';
+                                msgElem.style.borderRadius = '8px';
+                                msgElem.style.maxWidth = '85%';
+                                msgElem.style.wordWrap = 'break-word';
+                                msgElem.style.clear = 'both'; // Ensures proper stacking
+                                msgElem.style.fontSize = '0.9rem';
+
+                                // Format timestamp
+                                const messageTime = new Date(data.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                                // Style based on sender
+                                if (data.sender_id === sellerID) { // Message from Seller
+                                    msgElem.textContent = data.message;
+                                    msgElem.style.background = '#e4e6eb'; // Light grey for received
+                                    msgElem.style.color = '#050505';
+                                    msgElem.style.float = 'left';
+                                    msgElem.setAttribute('title', `Seller - ${messageTime}`);
+                                } else { // Message from Current User (You)
+                                    msgElem.textContent = data.message;
+                                    msgElem.style.background = '#1DBFC1'; // Theme color for sent
+                                    msgElem.style.color = 'white';
+                                    msgElem.style.float = 'right';
+                                     msgElem.setAttribute('title', `You - ${messageTime}`);
+                                }
+
+                                messagesDivElement.appendChild(msgElem);
+                                // Scroll to the bottom
+                                messagesDivElement.scrollTop = messagesDivElement.scrollHeight;
+                            } else {
+                                console.log("Received message for different ad or messagesDiv missing:", data.ad_id);
+                            }
+                        } catch (e) {
+                            console.error("Failed to parse WebSocket message:", e, event.data);
+                        }
+                    };
+
+                    socket.onerror = function(error) {
+                        console.error("WebSocket Error:", error);
+                        // Optionally alert user or update UI
+                        // alert("Chat connection error. Please try again.");
+                    };
+
+                    socket.onclose = function(event) {
+                        console.log("WebSocket closed:", event.code, event.reason);
+                        socket = null; // Clear the socket variable
+                        // Optionally attempt to reconnect or inform the user
+                        if (sellerStatusElement) {
+                             sellerStatusElement.textContent = "Chat Disconnected";
+                             sellerStatusElement.style.color = '#ffaaaa'; // Indicate disconnection
+                        }
+                    };
+
+                } catch (e) {
+                    console.error("WebSocket connection error:", e);
+                    alert("Could not establish chat connection.");
+                    chatBoxElement.style.display = "none"; // Hide chatbox on connection failure
+                    return;
+                }
+            } else if (socket.readyState === WebSocket.CONNECTING) {
+                console.log("WebSocket is still connecting...");
+                // Maybe show a connecting status briefly
+            } else if (socket.readyState === WebSocket.OPEN) {
+                console.log("WebSocket already open.");
+                // Optional: Fetch history if re-opening the box without full reconnect
+                // fetchConversationHistory();
+                 if (sellerStatusElement) fetchUserStatus(sellerID); // Re-check status
+            }
         };
 
         function sendTyping() {
-            /* console.log("Typing..."); */
+            // Placeholder for sending a 'typing' indicator if implemented on the backend
+            /*
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                 socket.send(JSON.stringify({ type: 'typing', ad_id: adID, receiver_id: sellerID }));
+            }
+            */
+           // console.log("Typing..."); // Keep console log for debugging if needed
         };
 
+        // Fetches seller status via HTTP endpoint
         function fetchUserStatus(userIdToFetch) {
              if (!sellerStatusElement) return; // Check if status element exists
+
+             // Initial state before fetch
+             // sellerStatusElement.textContent = "Checking status...";
+             // sellerStatusElement.style.color = '#ccc';
+
              fetch("/user-status?user_id=" + userIdToFetch)
-                .then(response => { if (!response.ok) { throw new Error(`HTTP error! Status: ${response.status}`); } return response.json(); })
-                .then(data => { sellerStatusElement.textContent = data.online ? "Seller Online" : "Seller Offline"; sellerStatusElement.style.color = data.online ? '#ffffff' : '#dcedff'; })
-                .catch(err => console.error("Error fetching seller status:", err));
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                 })
+                .then(data => {
+                    sellerStatusElement.textContent = data.online ? "Seller Online" : "Seller Offline";
+                    // Use specific colors for clarity
+                    sellerStatusElement.style.color = data.online ? '#adffad' : '#dcedff'; // Light green for online, light blue/grey for offline
+                 })
+                .catch(err => {
+                    console.error("Error fetching seller status:", err);
+                    sellerStatusElement.textContent = "Status N/A"; // Indicate error fetching status
+                    sellerStatusElement.style.color = '#ffaaaa'; // Reddish for error
+                 });
         };
 
 
         // --- Check IDs and Assign Global Functions ---
         if (isNaN(sellerID) || isNaN(adID)) {
             console.error("Error: Could not read valid sellerID or adID from data attributes for chat.", { sellerStr: sellerIDStr, adStr: adIDStr });
-            canChat = false;
+            canChat = false; // Disable chat functionality
             if (chatButtonElement) {
-                chatButtonElement.disabled = true; chatButtonElement.style.opacity = 0.6; chatButtonElement.style.cursor = 'not-allowed';
-                const icon = chatButtonElement.querySelector('i'); chatButtonElement.textContent = ' Chat Unavailable'; if (icon) chatButtonElement.prepend(icon);
+                // Disable the chat button visually
+                chatButtonElement.disabled = true;
+                chatButtonElement.style.opacity = 0.6;
+                chatButtonElement.style.cursor = 'not-allowed';
+                // Update text to indicate unavailability
+                const icon = chatButtonElement.querySelector('i');
+                chatButtonElement.textContent = ' Chat Unavailable'; // Prepend space for alignment
+                if (icon) chatButtonElement.prepend(icon); // Add icon back if it exists
             }
         } else {
              console.log("Chat IDs loaded:", { adID, sellerID });
 
-             // Assign functions called by HTML onclick to the global window object
+             // Assign functions called by HTML onclick handlers to the global window object
+             // This is necessary because the functions are defined inside DOMContentLoaded scope
              window.toggleChat = function() {
                  if (!canChat || !chatBoxElement) return;
                  if (chatBoxElement.style.display === "none" || chatBoxElement.style.display === "") {
-                     openChat(); // Call the local helper function
+                     openChat(); // Call the local helper function to open/connect
                  } else {
-                     chatBoxElement.style.display = "none";
+                     chatBoxElement.style.display = "none"; // Simply hide the box
                  }
              };
 
              window.sendMessage = function() {
-                 if (!canChat || !messageInputElement) return;
-                 var message = messageInputElement.value.trim();
-                 if (!message) return;
-                 var msgObj = { ad_id: adID, receiver_id: sellerID, message: message };
+                 if (!canChat || !messageInputElement || !socket || socket.readyState !== WebSocket.OPEN) {
+                     console.error("Cannot send message: Chat not available or WebSocket not open.");
+                      if (!socket || socket.readyState !== WebSocket.OPEN) {
+                         alert("Chat connection lost. Please reopen the chat window.");
+                         openChat(); // Try to reopen/reconnect
+                      }
+                     return;
+                 }
 
-                 if (socket && socket.readyState === WebSocket.OPEN) {
-                     try {
-                         socket.send(JSON.stringify(msgObj));
-                         console.log("Message sent:", msgObj);
-                         messageInputElement.value = ""; // Clear input
-                         messageInputElement.focus(); // Keep focus on input
-                     } catch (e) {
-                         console.error("Error sending message:", e);
-                         alert("Failed to send message. Connection might be closed.");
-                     }
-                 } else {
-                     console.error("Cannot send message, WebSocket is not connected.");
-                     alert("Chat connection lost. Please refresh or try opening chat again.");
-                     openChat(); // Attempt to reopen connection by calling the local helper
+                 var message = messageInputElement.value.trim();
+                 if (!message) return; // Don't send empty messages
+
+                 var msgObj = {
+                     ad_id: adID,
+                     receiver_id: sellerID, // Send to the seller
+                     message: message
+                     // timestamp will be added server-side or on reception in this example
+                 };
+
+                 try {
+                     socket.send(JSON.stringify(msgObj));
+                     console.log("Message sent:", msgObj);
+
+                     messageInputElement.value = ""; // Clear input field
+                     messageInputElement.focus(); // Keep focus on input
+
+                 } catch (e) {
+                     console.error("Error sending message:", e);
+                     alert("Failed to send message. Connection might be closed.");
                  }
              };
 
-             // Set up event listeners for elements controlled purely by JS
+             // Set up event listeners for elements controlled purely by JS (no onclick in HTML)
              if (messageInputElement) {
-                 messageInputElement.oninput = sendTyping; // Calls local helper
-                 messageInputElement.onkeypress = function(event) { if(event.key === 'Enter') window.sendMessage(); }; // Calls global sendMessage
+                 messageInputElement.oninput = sendTyping; // Calls local helper (currently just logs)
+                 messageInputElement.onkeypress = function(event) {
+                     // Send message on Enter key press
+                     if(event.key === 'Enter') {
+                        event.preventDefault(); // Prevent default form submission/newline
+                        window.sendMessage(); // Call the globally assigned function
+                     }
+                 };
              }
 
              // Initial status check and polling (calls local helper)
-             fetchUserStatus(sellerID);
-             setInterval(() => fetchUserStatus(sellerID), 10000);
+             fetchUserStatus(sellerID); // Check status immediately
+             setInterval(() => fetchUserStatus(sellerID), 30000); // Poll every 30 seconds (adjust interval as needed)
         }
 
     } // End initializeAdDetail
@@ -471,29 +718,29 @@ function handleLocationLogic(showAlerts = true) {
       console.log("DOM fully loaded and parsed. Initializing common elements...");
 
       // --- Common Element References & Initial Setup ---
-      const loadingOverlay = document.getElementById('loadingOverlay'); // Already referenced above
+      const loadingOverlay = document.getElementById('loadingOverlay');
       const filterForm = document.getElementById('filterForm');
       const locationIcon = document.getElementById('locationIcon');
-      const categoryElement = document.getElementById('category');
-      const subcategoryElement = document.getElementById('subcategory');
+      // const categoryElement = document.getElementById('category'); // For search bar (handled below)
+      // const subcategoryElement = document.getElementById('subcategory'); // For search bar (handled below)
       const showMoreBtn = document.getElementById('showMoreBtn'); // Main "Show More" for index/filters
-      const mainAdsGridElement = document.querySelector('main.container > section.ads-grid'); // Main ads grid (Index page)
-      const categoryGrid = document.getElementById('categoryGrid');
-      const subcategoryContainer = document.getElementById('subcategoryContainer');
+      const mainAdsGridElement = document.querySelector('main.container > section.ads-grid'); // Main ads grid (Index page or Filter results)
+      const categoryGrid = document.getElementById('categoryGrid'); // Container for category buttons/wrappers
+      // REMOVED: const subcategoryContainer = document.getElementById('subcategoryContainer'); // No longer used
       const categoryShowMoreBtn = document.getElementById('categoryShowMoreBtn'); // Category browse "Show More"
       const categoryAdsGrid = document.getElementById('categoryAdsGrid'); // Category browse results grid
-      const categoryResultsContainer = document.getElementById('categoryResultsContainer');
-      const browseSectionElement = document.querySelector('.category-browse-section');
+      const categoryResultsContainer = document.getElementById('categoryResultsContainer'); // Container for category results heading+grid+button
+      const browseSectionElement = document.querySelector('.category-browse-section'); // The whole category browse section
 
-            // --- Initialize Choices.js for Search Form Selects (if the search form itself exists) ---
-            const filterFormForChoices = document.getElementById('filterForm'); // Check for the specific form
+      // --- Initialize Choices.js for Search Form Selects (if the search form itself exists) ---
+      const filterFormForChoices = document.getElementById('filterForm'); // Check for the specific form
       if (filterFormForChoices) {
           console.log("Search form (#filterForm) found. Attempting Choices init for search dropdowns...");
           const categoryElementForSearch = filterFormForChoices.querySelector('#category'); // Find *within* the form
           const subcategoryElementForSearch = filterFormForChoices.querySelector('#subcategory'); // Find *within* the form
 
           if (categoryElementForSearch && subcategoryElementForSearch) {
-             let searchCategorySelect, searchSubcategorySelect; // Use different variable names to avoid confusion
+             let searchCategorySelect, searchSubcategorySelect; // Use different variable names
              try {
                 searchCategorySelect = new Choices(categoryElementForSearch, { searchEnabled: false, itemSelectText: '', position: 'auto', shouldSort: false });
                 searchSubcategorySelect = new Choices(subcategoryElementForSearch, { searchEnabled: false, itemSelectText: '', position: 'auto', shouldSort: false });
@@ -502,29 +749,47 @@ function handleLocationLogic(showAlerts = true) {
                  // Category change updates Subcategory dropdown (for search bar only)
                  categoryElementForSearch.addEventListener('change', function() {
                      const category = this.value;
-                     // Use the specific instance for the search subcategory
-                     searchSubcategorySelect.clearStore();
-                     searchSubcategorySelect.clearInput();
+                     searchSubcategorySelect.clearStore(); // Clear existing options
+                     searchSubcategorySelect.clearInput(); // Clear current selection/input
+
                      if (category === 'all' || !category) {
+                        // If 'All Categories' or no category selected
                         searchSubcategorySelect.setChoices([{ value: 'all', label: 'All Subcategories', selected: true, disabled: false }], 'value', 'label', true);
-                         if (!category) { searchSubcategorySelect.disable(); searchSubcategorySelect.setChoices([{ value: '', label: 'Subcategory', selected: true, disabled: true, placeholder: true }], 'value', 'label', true); }
-                         else { searchSubcategorySelect.enable(); }
+                        if (!category) {
+                            // If no category selected (e.g., placeholder), disable subcategory
+                            searchSubcategorySelect.disable();
+                            searchSubcategorySelect.setChoices([{ value: '', label: 'Subcategory', selected: true, disabled: true, placeholder: true }], 'value', 'label', true);
+                        } else {
+                             searchSubcategorySelect.enable(); // Enable for 'All Categories'
+                        }
                      } else if (subcategories[category]) {
+                         // If a valid category with subcategories is selected
                         searchSubcategorySelect.enable();
-                         const items = [{ value: '', label: 'Select Subcategory', placeholder: true, disabled: true, selected: false }].concat( subcategories[category].map(sub => ({ value: sub.toLowerCase().replace(/ /g, '_').replace(/&/g, 'and'), label: sub })) );
+                         const items = [
+                             { value: '', label: 'Select Subcategory', placeholder: true, disabled: true, selected: true } // Add placeholder first
+                         ].concat(
+                             subcategories[category].map(sub => ({
+                                 value: sub.toLowerCase().replace(/ /g, '_').replace(/&/g, 'and'), // Generate value
+                                 label: sub // Use original name as label
+                             }))
+                         );
                         searchSubcategorySelect.setChoices(items, 'value', 'label', true);
-                        // searchSubcategorySelect.setValue(''); // Removed - may cause issues if base listener fires first
+                        // Do NOT setValue here, let the placeholder be selected by default
                      } else {
+                         // If category has no subcategories or is invalid
                         searchSubcategorySelect.disable();
                         searchSubcategorySelect.setChoices([{ value: '', label: 'Subcategory', selected: true, disabled: true, placeholder: true }], 'value', 'label', true);
                      }
-                     console.log("Base.html: Search subcategory updated.");
+                     console.log("Base.html: Search subcategory dropdown updated.");
                  });
-                 // categoryElementForSearch.dispatchEvent(new Event('change')); // Avoid initial dispatch here too maybe
+                 // Trigger change on load IF a category is pre-selected (might be needed if form retains values)
+                 // if (categoryElementForSearch.value) {
+                 //    categoryElementForSearch.dispatchEvent(new Event('change'));
+                 // }
 
              } catch (error) { console.error("Base.html: Error initializing Choices.js for search form:", error); }
           } else {
-              console.log("Base.html: Category/Subcategory elements NOT found within #filterForm.");
+              console.log("Base.html: Category/Subcategory select elements NOT found within #filterForm.");
           }
       } else {
            console.log("Base.html: Search form (#filterForm) not found on this page. Skipping Choices init for search.");
@@ -538,132 +803,377 @@ function handleLocationLogic(showAlerts = true) {
           toggle.addEventListener('click', function(event) {
               event.preventDefault(); event.stopPropagation();
               const menus = parentDropdown.querySelectorAll('.dropdown-menu');
-              document.querySelectorAll('.account-dropdown .dropdown-menu.show').forEach(openMenu => { if (!parentDropdown.contains(openMenu)) { openMenu.classList.remove('show'); } });
+              // Close other dropdowns before toggling the current one
+              document.querySelectorAll('.account-dropdown .dropdown-menu.show').forEach(openMenu => {
+                 // Check if the open menu is NOT inside the currently clicked dropdown's parent
+                 if (!parentDropdown.contains(openMenu)) {
+                     openMenu.classList.remove('show');
+                 }
+              });
+              // Toggle the menus within the current dropdown
               menus.forEach(menu => menu.classList.toggle('show'));
           });
       });
-      document.addEventListener('click', function(event) { if (!event.target.closest('.account-dropdown')) { document.querySelectorAll('.account-dropdown .dropdown-menu.show').forEach(menu => menu.classList.remove('show')); } });
+      // Close dropdowns if clicking outside
+      document.addEventListener('click', function(event) {
+          if (!event.target.closest('.account-dropdown')) {
+             document.querySelectorAll('.account-dropdown .dropdown-menu.show').forEach(menu => menu.classList.remove('show'));
+          }
+      });
 
       // Search Form: Location Icon Click Listener
       if (locationIcon) {
-          locationIcon.addEventListener('click', function(event) { event.preventDefault(); handleLocationLogic(true); });
+          locationIcon.addEventListener('click', function(event) {
+              event.preventDefault(); // Prevent any default action
+              handleLocationLogic(true); // Get location and show alerts/prompts
+          });
       } else { console.log("Location icon element (#locationIcon) not found."); }
 
       // Search Form: Submission Handler
       if (filterForm) {
           filterForm.addEventListener('submit', function(e) {
-              e.preventDefault(); if (loadingOverlay) loadingOverlay.style.display = 'block';
-              currentFilterParams = null; currentFilterPage = 1;
-              if(categoryResultsContainer) categoryResultsContainer.style.display = 'none'; // Hide category results
-              const formData = new FormData(this); const state = formData.get('state'); const pincode = formData.get('pincode');
-              console.log("Filter submit triggered. Data:", Object.fromEntries(formData));
+              e.preventDefault(); // Prevent default form submission
+              if (loadingOverlay) loadingOverlay.style.display = 'block'; // Show loading overlay
+
+              // Reset state for filter results
+              currentFilterParams = null;
+              currentFilterPage = 1;
+              if(categoryResultsContainer) categoryResultsContainer.style.display = 'none'; // Hide category browse results
+
+              const formData = new FormData(this);
+              const state = formData.get('state');
+              const pincode = formData.get('pincode');
+              console.log("Filter submit triggered. Form Data:", Object.fromEntries(formData));
+
+              // Perform forward geocoding only if state and pincode are provided
               let geocodePromise = (state && pincode) ? fetchAndUpdateLatLng(state, pincode) : Promise.resolve({ lat: "", lng: "" });
-              geocodePromise.then(() => {
-                  const searchParams = new URLSearchParams(new FormData(filterForm)); searchParams.set('page', '1'); currentFilterParams = new URLSearchParams(searchParams); currentFilterParams.delete('page'); console.log("Filter API call params:", searchParams.toString());
-                  if(mainAdsGridElement) mainAdsGridElement.innerHTML = '<p style="text-align: center; grid-column: 1 / -1;">Searching...</p>'; else console.warn("Main ads grid not found for filter search status"); // Warn if grid missing
-                  if (showMoreBtn) showMoreBtn.style.display = 'none';
-                  return fetch('/filter-ads', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: searchParams.toString() });
+
+              geocodePromise.then(({ lat, lng }) => { // Destructure the resolved lat/lng
+                  // Update form data *after* geocoding if successful
+                  // Note: fetchAndUpdateLatLng already updates the hidden inputs if successful
+                  // We just need to ensure the FormData used for the search includes these *potentially* updated values.
+                  // Re-creating URLSearchParams from the form *after* the promise resolves ensures this.
+                  const searchParams = new URLSearchParams(new FormData(filterForm)); // Use potentially updated form data
+                  searchParams.set('page', '1'); // Start at page 1 for new filter
+                  currentFilterParams = new URLSearchParams(searchParams); // Store params for subsequent "Show More" clicks
+                  currentFilterParams.delete('page'); // Don't store page in base params
+
+                  console.log("Filter API call params:", searchParams.toString());
+
+                  // Update UI to show searching status
+                  if(mainAdsGridElement) {
+                      mainAdsGridElement.innerHTML = '<p style="text-align: center; grid-column: 1 / -1;">Searching...</p>';
+                      mainAdsGridElement.style.display = 'grid'; // Ensure grid is visible even when empty/searching
+                  } else {
+                      console.warn("Main ads grid not found for filter search status");
+                  }
+                  if (showMoreBtn) showMoreBtn.style.display = 'none'; // Hide main show more button
+
+                  // Make the fetch request to filter ads
+                  return fetch('/filter-ads', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                      body: searchParams.toString()
+                  });
               })
-              .then(response => { if (!response.ok) { return response.text().then(text => { throw new Error(`Filter response error: ${response.statusText} (${response.status}). ${text}`); }); } return response.json(); })
-              .then(filteredAdsPage1 => { console.log("Received filtered ads:", filteredAdsPage1); updateAdsGrid(filteredAdsPage1); }) // Updates MAIN grid (will warn if missing)
-              .catch(error => { console.error('Filter process error:', error); if(mainAdsGridElement) mainAdsGridElement.innerHTML = `<p style="text-align: center; color: red; grid-column: 1 / -1;">Failed to load ads. ${error.message}</p>`; if (showMoreBtn) showMoreBtn.style.display = 'none'; currentFilterParams = null; })
-              .finally(() => { if (loadingOverlay) loadingOverlay.style.display = 'none'; });
+              .then(response => {
+                  if (!response.ok) {
+                      // Try to parse error text from response body
+                      return response.text().then(text => {
+                          throw new Error(`Filter response error: ${response.statusText} (${response.status}). ${text}`);
+                      });
+                  }
+                  return response.json(); // Parse successful JSON response
+              })
+              .then(filteredAdsPage1 => {
+                  console.log("Received filtered ads (Page 1):", filteredAdsPage1);
+                  updateAdsGrid(filteredAdsPage1); // Update the MAIN ads grid with results
+              })
+              .catch(error => {
+                  console.error('Filter process error:', error);
+                  // Display error message in the main grid
+                  if(mainAdsGridElement) {
+                      mainAdsGridElement.innerHTML = `<p style="text-align: center; color: red; grid-column: 1 / -1;">Failed to load ads. ${error.message}</p>`;
+                  }
+                  if (showMoreBtn) showMoreBtn.style.display = 'none'; // Hide button on error
+                  currentFilterParams = null; // Reset filter params on error
+              })
+              .finally(() => {
+                  if (loadingOverlay) loadingOverlay.style.display = 'none'; // Hide loading overlay
+              });
           });
       } else { console.log("Filter form element (#filterForm) not found."); }
 
       // --- Initial Page Setup ---
-      // Setup carousels potentially existing on the page (index or category results)
+      // Setup carousels for any ad cards already present on the page (e.g., from server-side render)
       document.querySelectorAll('.carousel').forEach(setupCarousel);
       console.log("Initial carousels setup check done.");
 
-      // Auto-fetch location on page load (useful for categories/search)
-      console.log("Attempting auto-fetch location on page load...");
+      // Auto-fetch location on page load (useful for categories/search prefill)
+      // Pass 'false' to prevent alerts if location fails automatically
+      console.log("Attempting auto-fetch location on page load (no alerts)...");
       handleLocationLogic(false);
 
-      // --- Main Pagination ("Show More" for Latest Posts / Filtered Results - Primarily for Index) ---
+      // --- Main Pagination ("Show More" for Latest Posts / Filtered Results - Primarily for Index/Main Grid) ---
       if (showMoreBtn && mainAdsGridElement) {
           const initialAdCount = mainAdsGridElement.querySelectorAll('.ad-card').length;
+          // Show button only if there might be more pages
           showMoreBtn.style.display = (initialAdCount === 0 || initialAdCount < PAGE_SIZE) ? 'none' : 'block';
+
           showMoreBtn.addEventListener('click', function() {
-              this.textContent = 'Loading...'; this.disabled = true; let fetchUrl, fetchOptions;
-              if (currentFilterParams) { // Fetching more FILTERED results
-                  currentFilterPage++; const paramsForFetch = new URLSearchParams(currentFilterParams); paramsForFetch.append('page', currentFilterPage.toString()); fetchUrl = '/filter-ads'; fetchOptions = { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: paramsForFetch.toString() }; console.log(`Fetching FILTERED page ${currentFilterPage}`);
-              } else { // Fetching more INITIAL results (Index page default)
-                  initialLoadPage++; fetchUrl = `/fetch-ads?page=${initialLoadPage}`; fetchOptions = { method: 'GET' }; console.log(`Fetching INITIAL page ${initialLoadPage}`);
+              this.textContent = 'Loading...';
+              this.disabled = true;
+              let fetchUrl, fetchOptions;
+
+              if (currentFilterParams) {
+                  // Fetching more FILTERED results
+                  currentFilterPage++;
+                  const paramsForFetch = new URLSearchParams(currentFilterParams); // Use stored base params
+                  paramsForFetch.append('page', currentFilterPage.toString());
+                  fetchUrl = '/filter-ads';
+                  fetchOptions = {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                      body: paramsForFetch.toString()
+                  };
+                  console.log(`Fetching FILTERED page ${currentFilterPage}`);
+              } else {
+                  // Fetching more INITIAL results (Index page default)
+                  initialLoadPage++;
+                  fetchUrl = `/fetch-ads?page=${initialLoadPage}`;
+                  fetchOptions = { method: 'GET' };
+                  console.log(`Fetching INITIAL page ${initialLoadPage}`);
               }
+
               fetch(fetchUrl, fetchOptions)
-                  .then(response => { if (!response.ok) { return response.text().then(text => { throw new Error(`Fetch more ads error: ${response.statusText} (${response.status}). ${text}`); }); } return response.json(); })
-                  .then(newAds => { appendAdsToGrid(newAds); }) // Appends to MAIN grid (will warn if missing)
-                  .catch(error => { console.error('Error fetching more ads:', error); alert(`Could not load more ads: ${error.message}`); this.style.display = 'none'; })
-                  .finally(() => { if (this.style.display !== 'none') { this.textContent = 'Show More'; this.disabled = false; } });
+                  .then(response => {
+                      if (!response.ok) {
+                          return response.text().then(text => {
+                              throw new Error(`Fetch more ads error: ${response.statusText} (${response.status}). ${text}`);
+                          });
+                      }
+                      return response.json();
+                  })
+                  .then(newAds => {
+                      appendAdsToGrid(newAds); // Appends to MAIN grid
+                  })
+                  .catch(error => {
+                      console.error('Error fetching more ads:', error);
+                      alert(`Could not load more ads: ${error.message}`);
+                      this.style.display = 'none'; // Hide button on error
+                  })
+                  .finally(() => {
+                      // Reset button state only if it wasn't hidden due to error or no more results
+                      if (this.style.display !== 'none') {
+                          this.textContent = 'Show More';
+                          this.disabled = false;
+                      }
+                  });
           });
-      } else { console.log("Main Show More button (#showMoreBtn) or main ads grid not found (expected on non-index pages)."); }
+      } else {
+          console.log("Main Show More button (#showMoreBtn) or main ads grid not found (expected on non-index pages or if initial load had < PAGE_SIZE ads).");
+      }
 
 
-      // --- CATEGORY BROWSE INITIALIZATION & LISTENERS (If elements exist) ---
-      if (categoryGrid && subcategoryContainer && browseSectionElement && typeof subcategories === 'object' && subcategories !== null && Object.keys(subcategories).length > 0) {
-          console.log("INFO: Prerequisites met. Initializing Category Browse Section.");
-          // 1. Populate Main Categories
-          try {
-              Object.keys(subcategories).forEach(catKey => {
-                  const catButton = document.createElement('button'); catButton.className = 'category-item'; catButton.textContent = catKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()); catButton.dataset.category = catKey; categoryGrid.appendChild(catButton);
-                  const subList = document.createElement('div'); subList.className = 'subcategory-list'; subList.id = `subcategories-for-${catKey}`; subcategoryContainer.appendChild(subList);
-              });
-              console.log(`INFO: Successfully added ${Object.keys(subcategories).length} category buttons.`);
+      // --- CATEGORY BROWSE     // --- CATEGORY BROWSE INITIALIZATION & LISTENERS (If elements exist) ---
+    // Check for essential elements for the browse section
+    if (categoryGrid && browseSectionElement && typeof subcategories === 'object' && subcategories !== null && Object.keys(subcategories).length > 0) {
+        console.log("INFO: Prerequisites met. Initializing Category Browse Section.");
+        browseSectionElement.style.display = 'block'; // Ensure section is visible
 
-              // 2. Category Click Listener
-              categoryGrid.addEventListener('click', function(event) {
-                 if (event.target.classList.contains('category-item')) {
-                    const selectedCategoryButton = event.target; const categoryKey = selectedCategoryButton.dataset.category; console.log(`Category clicked: ${categoryKey}`);
-                    categoryGrid.querySelectorAll('.category-item.active').forEach(b => b.classList.remove('active')); selectedCategoryButton.classList.add('active');
-                    subcategoryContainer.querySelectorAll('.subcategory-list').forEach(l => { l.classList.remove('show'); l.innerHTML = ''; });
-                    if (categoryAdsGrid) categoryAdsGrid.innerHTML = ''; else console.warn("Category ads grid missing for clearing"); // Warn
-                    if (categoryShowMoreBtn) categoryShowMoreBtn.style.display = 'none'; else console.warn("Category show more missing for hiding"); // Warn
-                    if (categoryResultsContainer) categoryResultsContainer.style.display = 'none'; else console.warn("Category results container missing for hiding"); // Warn
-                    currentSubcategoryFilter = null; categoryCurrentPage = 1;
-                    const targetSubList = document.getElementById(`subcategories-for-${categoryKey}`);
-                    if (targetSubList && subcategories[categoryKey] && Array.isArray(subcategories[categoryKey])) {
-                        subcategories[categoryKey].forEach(subName => { const subButton = document.createElement('button'); subButton.className = 'subcategory-item'; subButton.textContent = subName; subButton.dataset.subcategory = subName.toLowerCase().replace(/ /g, '_').replace(/&/g, 'and'); subButton.dataset.parentCategory = categoryKey; targetSubList.appendChild(subButton); });
-                        targetSubList.classList.add('show');
-                    } else { console.warn(`No subcategories or target list for: ${categoryKey}`); if (targetSubList) { targetSubList.innerHTML = '<p style="color: #777; font-style: italic; width: 100%; text-align: center;">No subcategories available.</p>'; targetSubList.classList.add('show'); } }
-                 }
-              });
+        try {
+            // 1. Populate Main Categories with Wrappers
+            Object.keys(subcategories).forEach(catKey => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'category-wrapper'; // Create wrapper div
 
-              // 3. Subcategory Click Listener
-              subcategoryContainer.addEventListener('click', function(event) {
-                  if (event.target.classList.contains('subcategory-item')) {
-                      const subcatButton = event.target; const subcategoryKey = subcatButton.dataset.subcategory; const parentCategoryKey = subcatButton.dataset.parentCategory; console.log(`Subcategory clicked: ${subcategoryKey} under ${parentCategoryKey}`);
-                      const lat = document.getElementById('latInput')?.value; const lng = document.getElementById('lngInput')?.value; // Safely get lat/lng
-                      if (!lat || !lng) { alert("Location required. Please allow location access or use the icon."); return; }
-                      categoryCurrentPage = 1; currentSubcategoryFilter = { category: parentCategoryKey, subcategory: subcategoryKey };
-                      fetchCategoryAds(parentCategoryKey, subcategoryKey, lat, lng, 1); // Fetch page 1 (will warn if elements missing)
+                const catButton = document.createElement('button');
+                catButton.className = 'category-item';
+                catButton.textContent = catKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                catButton.dataset.category = catKey; // Store the original key
+                wrapper.appendChild(catButton); // Add button to wrapper
+
+                const subList = document.createElement('div');
+                subList.className = 'subcategory-list'; // Container for subcategories for THIS category
+                subList.id = `subcategories-for-${catKey}`; // Unique ID if needed later
+                subList.style.display = 'none'; // Hide initially
+                wrapper.appendChild(subList); // Add sublist container to wrapper
+
+                categoryGrid.appendChild(wrapper); // Add the whole wrapper to the grid
+            });
+            console.log(`INFO: Successfully added ${Object.keys(subcategories).length} category wrappers.`);
+
+            // 2. Combined Click Listener for Categories and Subcategories (using event delegation on categoryGrid)
+            categoryGrid.addEventListener('click', function(event) {
+
+               // --- Handle Category Item Click ---
+               if (event.target.classList.contains('category-item')) {
+                  const selectedCategoryButton = event.target;
+                  const categoryKey = selectedCategoryButton.dataset.category; // Get key from data attribute
+                  const wrapper = selectedCategoryButton.closest('.category-wrapper');
+                  const targetSubList = wrapper ? wrapper.querySelector('.subcategory-list') : null;
+
+                  if (!categoryKey || !wrapper || !targetSubList) {
+                      console.error("ERROR: Could not find category key, wrapper, or sublist for clicked item.", event.target);
+                      return;
                   }
-              });
+                  // console.log(`Category clicked: ${categoryKey}`); // Optional log
 
-          } catch (error) { console.error("ERROR: Failed during category button population:", error); browseSectionElement.style.display = 'none'; console.warn("WARN: Hiding browse section due to population error."); }
-      } else { console.log("Category browse section prerequisites not met or elements not found on this page."); if(browseSectionElement) browseSectionElement.style.display = 'none'; }
+                  const isActive = targetSubList.classList.contains('show');
 
-       // 4. Category Results "Show More" Button Listener (If button exists)
-       if (categoryShowMoreBtn) {
-           categoryShowMoreBtn.addEventListener('click', function() {
-               if (!currentSubcategoryFilter) { console.error("Cannot show more: No subcategory filter active."); return; }
-               categoryCurrentPage++; console.log(`Loading category page: ${categoryCurrentPage}`);
-               const lat = document.getElementById('latInput')?.value; const lng = document.getElementById('lngInput')?.value;
-               if (!lat || !lng) { alert("Location missing. Cannot load more."); this.style.display = 'none'; return; }
-               fetchCategoryAds(currentSubcategoryFilter.category, currentSubcategoryFilter.subcategory, lat, lng, categoryCurrentPage); // Will warn if elements missing
-           });
-       } else { console.log("INFO: Category Show More button (#categoryShowMoreBtn) not found (expected if no results yet or not on index page)."); }
+                  // --- First: Hide all *other* open sublists and deactivate their buttons ---
+                  categoryGrid.querySelectorAll('.category-wrapper').forEach(otherWrapper => {
+                      const otherButton = otherWrapper.querySelector('.category-item');
+                      const otherSubList = otherWrapper.querySelector('.subcategory-list');
+                      // Check if it's a different wrapper and its sublist is currently shown
+                      if (otherWrapper !== wrapper && otherSubList && otherSubList.classList.contains('show')) {
+                          otherSubList.classList.remove('show');
+                          otherSubList.style.display = 'none';
+                          otherSubList.innerHTML = ''; // Clear content when hiding to force repopulation
+                          if (otherButton) otherButton.classList.remove('active');
+                      }
+                  });
+
+                  // --- Second: Toggle the clicked category's sublist ---
+                  if (isActive) {
+                      // If it was active, hide it & deactivate button
+                      targetSubList.classList.remove('show');
+                      targetSubList.style.display = 'none';
+                      targetSubList.innerHTML = ''; // Clear content
+                      selectedCategoryButton.classList.remove('active');
+
+                      // Hide category results section when collapsing the active category
+                      if (categoryResultsContainer) categoryResultsContainer.style.display = 'none';
+                      if (categoryAdsGrid) categoryAdsGrid.innerHTML = '';
+                      if (categoryShowMoreBtn) categoryShowMoreBtn.style.display = 'none';
+                      currentSubcategoryFilter = null; // Clear filter
+
+                  } else {
+                      // --- Show Logic ---
+                      // If it was inactive, activate button, populate (if needed), show it
+                      selectedCategoryButton.classList.add('active'); // Activate current button
+
+                      // Populate subcategories only if the list is currently empty
+                      if (!targetSubList.innerHTML.trim()) {
+                          // Check if data exists for this category key
+                          if (subcategories[categoryKey] && Array.isArray(subcategories[categoryKey]) && subcategories[categoryKey].length > 0) {
+                              // console.log(`Populating subcategories for ${categoryKey}`); // Optional log
+                              subcategories[categoryKey].forEach(subName => {
+                                  const subButton = document.createElement('button');
+                                  subButton.className = 'subcategory-item';
+                                  subButton.textContent = subName;
+                                  // Store both subcategory key (formatted) and original parent category key
+                                  subButton.dataset.subcategory = subName.toLowerCase().replace(/ /g, '_').replace(/&/g, 'and');
+                                  subButton.dataset.parentCategory = categoryKey;
+                                  targetSubList.appendChild(subButton);
+                              });
+                          } else {
+                              // Display message if no subcategories found
+                              targetSubList.innerHTML = '<p style="color: #777; font-style: italic; width: 100%; text-align: center; padding: 10px 0;">No subcategories available.</p>';
+                          }
+                      }
+                      // Show the list
+                      targetSubList.style.display = 'flex'; // Set display to flex (or block if preferred) FIRST
+                      // Use a tiny timeout before adding class if animation sometimes doesn't trigger reliably
+                      // setTimeout(() => {
+                            targetSubList.classList.add('show'); // THEN add class for animation/styling
+                      // }, 10);
 
 
-       // --- Initialize Page-Specific Features ---
-       initializeAdDetail(); // This function will check internally if it's on the right page
+                       // Hide any previous category results section when opening a new category (before a subcat is clicked)
+                      if (categoryResultsContainer) categoryResultsContainer.style.display = 'none';
+                      if (categoryAdsGrid) categoryAdsGrid.innerHTML = '';
+                      if (categoryShowMoreBtn) categoryShowMoreBtn.style.display = 'none';
+                      currentSubcategoryFilter = null; // Clear filter
+                  }
+               }
+
+               // --- Handle Subcategory Item Click ---
+               else if (event.target.classList.contains('subcategory-item')) {
+                   const subcatButton = event.target;
+                   const subcategoryKey = subcatButton.dataset.subcategory;
+                   const parentCategoryKey = subcatButton.dataset.parentCategory; // Get parent category key
+
+                   if (!subcategoryKey || !parentCategoryKey) {
+                       console.error("Subcategory or parent category key missing from data attributes.");
+                       return;
+                   }
+                   // console.log(`Subcategory clicked: ${subcategoryKey} under ${parentCategoryKey}`); // Optional log
+
+                   // Optional: Highlight clicked subcategory
+                    const parentSubList = subcatButton.closest('.subcategory-list');
+                    if(parentSubList) {
+                        parentSubList.querySelectorAll('.subcategory-item.active').forEach(activeSub => activeSub.classList.remove('active'));
+                        subcatButton.classList.add('active');
+                    }
 
 
-    }); // End DOMContentLoaded
-    </script>
+                   // Get location - required for fetching ads
+                   const lat = document.getElementById('latInput')?.value;
+                   const lng = document.getElementById('lngInput')?.value;
 
-    <!-- Placeholder for extra page-specific scripts -->
-    {{ block "scripts_extra" . }}{{ end }}
+                   // Check if lat/lng are available (they should be if handleLocationLogic ran)
+                   if (!lat || !lng) {
+                       alert("Location is required to browse by subcategory. Please allow location access or use the location icon in the search bar.");
+                       return; // Stop if no location
+                   }
 
-</body>
-</html>
+                   // Set current filter and reset page for results
+                   categoryCurrentPage = 1;
+                   currentSubcategoryFilter = { category: parentCategoryKey, subcategory: subcategoryKey };
+
+                   // Fetch ads for the selected subcategory (page 1)
+                   fetchCategoryAds(parentCategoryKey, subcategoryKey, lat, lng, 1); // Calls the function to load ads into #categoryResultsContainer
+               }
+            });
+
+
+        } catch (error) {
+            console.error("ERROR: Failed during category browse section setup:", error);
+            if(browseSectionElement) browseSectionElement.style.display = 'none'; // Hide section on error
+            console.warn("WARN: Hiding category browse section due to initialization error.");
+        }
+    } else {
+        // Log if prerequisites are not met
+        console.log("INFO: Category browse section prerequisites (categoryGrid, browseSectionElement, subcategories object) not met or elements not found. Hiding section.");
+        if(browseSectionElement) browseSectionElement.style.display = 'none'; // Hide section if prerequisites fail
+    } // End of Category Browse Initialization Check
+
+     // --- Category Results "Show More" Button Listener (If button exists) ---
+     // (Keep this section exactly as it was in the previous correct version)
+     if (categoryShowMoreBtn) {
+         categoryShowMoreBtn.addEventListener('click', function() {
+             if (!currentSubcategoryFilter || !currentSubcategoryFilter.category || !currentSubcategoryFilter.subcategory) {
+                 console.error("Cannot show more: No valid subcategory filter active.");
+                 return;
+             }
+             categoryCurrentPage++;
+             console.log(`Loading category page: ${categoryCurrentPage} for ${currentSubcategoryFilter.subcategory}`);
+             const lat = document.getElementById('latInput')?.value;
+             const lng = document.getElementById('lngInput')?.value;
+             if (!lat || !lng) {
+                 alert("Location missing. Cannot load more ads.");
+                 this.style.display = 'none';
+                 return;
+             }
+             fetchCategoryAds(currentSubcategoryFilter.category, currentSubcategoryFilter.subcategory, lat, lng, categoryCurrentPage);
+         });
+     } else {
+         console.log("INFO: Category Show More button (#categoryShowMoreBtn) not found (normal if results container isn't visible yet).");
+     }
+     // --- End Category Results "Show More" ---
+
+     // --- Initialize Page-Specific Features ---
+     initializeAdDetail(); // This function checks internally if it's on the ad detail page
+     // Add other page-specific initializations here if needed
+     // --- End Page-Specific Features ---
+
+}); // End DOMContentLoaded
+</script>
+
+<!-- Placeholder for extra page-specific scripts -->
+{{ block "scripts_extra" . }}{{ end }}
+
+</body> 
+</html> 
+

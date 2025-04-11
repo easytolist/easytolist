@@ -1,6 +1,6 @@
-/* ============================================= */
-/* ===            General Styles             === */
-/* ============================================= */
+/* ============================================================
+   GENERAL STYLES
+============================================================ */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -10,142 +10,33 @@ body {
     line-height: 1.6; /* Improved readability */
 }
 
-/* ============================================= */
-/* ===            Header Styles              === */
-/* ============================================= */
-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 2rem;
-    background: white;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    position: relative; /* Keep relative for normal flow */
-    border-bottom: 1px solid #e2e8f0; /* Lighter border */
-    z-index: 100; /* Ensure header is above potentially sticky elements */
-}
 
-.logo-container {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.logo-container a {
-    display: flex;
-    align-items: center;
-    text-decoration: none;
-    color: inherit; /* Prevent default link color */
-}
-
-.company-name {
-    color: #1DBFC1;
-    font-weight: bold;
-    font-size: 1.5rem;
-    transition: transform 0.3s ease;
-}
-
-.company-name:hover {
-    transform: scale(1.05);
-}
-
-.logo {
-    max-width: 45px; /* Slightly smaller logo */
-    height: auto;
-    transition: transform 0.3s ease;
-}
-
-.logo:hover {
-    transform: scale(1.05);
-}
-
-/* Navigation Links */
-.home-links {
-    display: flex;
-    gap: 2rem;
-    /* Centering method adjustment */
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-}
-
-.home-links a {
-    color: #333;
-    text-decoration: none;
-    transition: color 0.3s ease;
-    padding: 0.5rem 0; /* Add some padding for easier clicking */
-}
-
-.home-links a:hover {
-    color: #1DBFC1;
-}
-
-/* Right Side Links */
-.main-links {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-}
-
-.post-ad-btn {
-    background: #1DBFC1;
-    color: white !important;
-    padding: 0.5rem 1.5rem;
-    border-radius: 20px;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    border: 2px solid transparent;
-    font-weight: 500; /* Slightly bolder */
-}
-
-.post-ad-btn:hover {
-    background: white;
-    color: #1DBFC1 !important;
-    border-color: #1DBFC1;
-}
-
-/* Account Dropdown */
-.account-dropdown {
-    position: relative;
-    display: inline-block;
-}
-
-.account-dropdown .dropdown-toggle img { /* Target image directly */
-     width: 32px;
-     height: 32px;
-     display: block;
-     cursor: pointer;
-     transition: transform 0.2s ease;
-}
-.account-dropdown .dropdown-toggle img:hover {
-    transform: scale(1.1);
-}
+/* ============================================================
+   HEADER STYLES REMOVED FROM THIS PAGE
+============================================================ */
+/* (Header styles are now provided in your base CSS and have been removed here.) */
 
 
-/* ============================================= */
-/* ===    Ad Detail Page Specific Styles     === */
-/* ============================================= */
-
+/* ============================================================
+   AD DETAIL PAGE SPECIFIC STYLES
+============================================================ */
 .ad-detail-container {
     max-width: 1200px;
-    margin: 2rem auto; /* Add margin top/bottom */
-    padding: 0 1rem; /* Padding left/right */
+    margin: 2rem auto; 
+    padding: 0 1rem; 
     display: grid;
-    grid-template-columns: 1.5fr 1fr; /* Ratio for image vs details */
-    gap: 2rem; /* Space between columns */
-    align-items: start; /* Align items to the top */
+    grid-template-columns: 1.5fr 1fr; 
+    gap: 2rem; 
+    align-items: start; 
 }
 
 /* --- Image Gallery Styles --- */
 .image-gallery {
     display: flex;
     flex-direction: column;
-    position: sticky; /* Make image gallery sticky on large screens */
-    top: 1rem;        /* Offset from top when sticky */
-    /* Note: Sticky behavior might need adjustment based on header height */
+    position: sticky; 
+    top: 1rem;
 }
-
 .main-image {
     border-radius: 8px;
     overflow: hidden;
@@ -154,33 +45,32 @@ header {
     margin-bottom: 1rem;
     border: 1px solid #e2e8f0;
 }
-
 .main-image img {
     display: block;
     width: 100%;
     aspect-ratio: 4 / 3;
     height: auto;
     max-height: 600px;
-    object-fit: contain; /* Keep as contain */
-    background-color: #f8f9fa; /* Background for contain */
+    object-fit: contain; 
+    background-color: #f8f9fa; 
     transition: opacity 0.3s ease-in-out;
 }
 
 .thumbnail-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr); /* 4 thumbnails per row */
+    grid-template-columns: repeat(4, 1fr); 
     gap: 0.75rem;
 }
 
 .thumbnail {
     display: block;
     width: 100%;
-    aspect-ratio: 1 / 1; /* Square thumbnails */
+    aspect-ratio: 1 / 1; 
     height: auto;
-    object-fit: contain; /* Keep as contain */
+    object-fit: contain; 
     border: 2px solid transparent;
     transition: transform 0.2s ease-in-out, border-color 0.2s ease-in-out;
-    background-color: #f8f9fa; /* Background for contain */
+    background-color: #f8f9fa; 
     padding: 3px;
     border-radius: 6px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
@@ -204,8 +94,7 @@ header {
     padding: 1.5rem;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-    /* Details section is not sticky by default now, gallery is */
-    position: relative; /* Changed from sticky */
+    position: relative; 
     border: 1px solid #e2e8f0;
 }
 
@@ -286,89 +175,67 @@ header {
     color: #4a5568;
     font-size: 1rem;
     line-height: 1.7;
-    white-space: pre-wrap; /* Respect line breaks */
+    white-space: pre-wrap;
 }
 
 
-/* ============================================= */
-/* === NEW - Colourful & Animated Chat Button === */
-/* ============================================= */
+/* ============================================================
+   NEW - COLOURFUL & ANIMATED CHAT BUTTON
+============================================================ */
 .chat-button-detail {
-    /* ---- Basic Layout & Sizing ---- */
-    width: 100%;                  /* Take full width of container */
-    padding: 0.9rem 1.5rem;       /* Comfortable padding */
-    margin-top: 1.8rem;           /* Space above the button */
-    border: none;                 /* No default border */
-    border-radius: 50px;          /* Fully rounded pill shape */
-    cursor: pointer;              /* Indicate it's clickable */
-    outline: none;                /* Remove default focus outline */
-    position: relative;           /* Needed for potential pseudo-elements */
-    overflow: hidden;             /* Hide overflow for effects */
-
-    /* ---- Text & Icon Styling ---- */
-    color: white;                 /* White text */
-    font-size: 1rem;              /* Standard font size */
-    font-weight: 600;             /* Semi-bold */
-    text-transform: uppercase;    /* Uppercase text */
-    letter-spacing: 0.8px;        /* Spacing between letters */
-    display: flex;                /* Use flexbox */
-    align-items: center;          /* Center items vertically */
-    justify-content: center;      /* Center items horizontally */
-    gap: 0.8rem;                  /* Space between icon and text */
-
-    /* ---- COLOURFUL Gradient Background ---- */
+     width: 100%;                 
+    padding: 0.9rem 1.5rem;      
+    margin-top: 1.8rem;          
+    border: none;                
+    border-radius: 50px;         
+    cursor: pointer;             
+    outline: none;               
+    position: relative;          
+    overflow: hidden;            
+    color: white;                
+    font-size: 1rem;             
+    font-weight: 600;            
+    text-transform: uppercase;   
+    letter-spacing: 0.8px;       
+    display: flex;               
+    align-items: center;         
+    justify-content: center;     
+    gap: 0.8rem;                 
     background-image: linear-gradient(135deg, #1de9b6 0%, #1DBFC1 50%, #00b8d4 100%);
-    background-size: 250% auto; /* Larger size for animation */
-
-    /* ---- Stylish Shadow ---- */
-    box-shadow: 0 4px 15px rgba(0, 184, 212, 0.3); /* Cyan shadow */
-
-    /* ---- ANIMATION Transitions ---- */
-    transition: background-position 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), /* Smoother background shift */
-                transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1),        /* Smoother lift */
-                box-shadow 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);        /* Smoother shadow change */
+    background-size: 250% auto; 
+    box-shadow: 0 4px 15px rgba(0, 184, 212, 0.3); 
+    transition: background-position 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1),        
+                box-shadow 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
-
-/* ---- Icon Styling ---- */
 .chat-button-detail i.fa-comments {
     font-size: 1.2em;
-    transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); /* Bouncy icon transition */
-    position: relative; /* Keep icon flow normal */
-    z-index: 2; /* Ensure icon is above potential background effects */
+    transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); 
+    position: relative; 
+    z-index: 2; 
 }
-/* Also style the text span if needed for z-index */
 .chat-button-detail span {
      position: relative;
      z-index: 2;
 }
-
-
-/* ---- HOVER State Animation & Style ---- */
 .chat-button-detail:hover:not(:disabled) {
-    background-position: right center; /* Shift background gradient */
-    transform: translateY(-4px) scale(1.03); /* Slightly more lift and scale */
-    box-shadow: 0 8px 22px rgba(0, 184, 212, 0.5); /* Stronger, larger shadow */
+    background-position: right center; 
+    transform: translateY(-4px) scale(1.03); 
+    box-shadow: 0 8px 22px rgba(0, 184, 212, 0.5); 
 }
-
-/* Bouncy/wiggle icon on button hover */
 .chat-button-detail:hover:not(:disabled) i.fa-comments {
-    transform: rotate(12deg) scale(1.15) translateY(-1px); /* More pronounced icon animation */
+    transform: rotate(12deg) scale(1.15) translateY(-1px); 
 }
-
-
-/* ---- ACTIVE (Pressed) State Style ---- */
 .chat-button-detail:active:not(:disabled) {
-    transform: translateY(-1px) scale(0.98); /* Slight press down effect */
-    box-shadow: 0 3px 12px rgba(0, 184, 212, 0.35); /* Reduced shadow */
+    transform: translateY(-1px) scale(0.98); 
+    box-shadow: 0 3px 12px rgba(0, 184, 212, 0.35); 
     background-position: left center;
-    transition-duration: 0.1s; /* Faster press effect */
+    transition-duration: 0.1s; 
 }
 .chat-button-detail:active:not(:disabled) i.fa-comments {
-     transform: scale(1); /* Reset icon scale on press */
+     transform: scale(1); 
      transition-duration: 0.1s;
 }
-
-/* ---- DISABLED State Styling ---- */
 .chat-button-detail:disabled {
     background-image: none;
     background-color: #bdbdbd;
@@ -378,29 +245,32 @@ header {
     transform: none;
     box-shadow: none;
 }
-/* Ensure icon color also changes when disabled */
 .chat-button-detail:disabled i.fa-comments {
      color: #e0e0e0;
 }
 
-/* ============================================= */
-/* === END - Colourful & Animated Chat Button === */
-/* ============================================= */
 
+/* ============================================================
+   RESPONSIVE DESIGN
+============================================================ */
 
-/* ============================================= */
-/* ===          Responsive Design            === */
-/* ============================================= */
-
-/* Larger Tablets / Small Laptops */
+/* Larger Tablets / Small Laptops (and below) */
 @media (max-width: 1024px) {
     .ad-detail-container {
-        grid-template-columns: 1fr; /* Stack columns */
+        grid-template-columns: 1fr;
         gap: 1.5rem;
     }
 
     .image-gallery {
-       position: static; /* Unstick gallery */
+       position: static;
+       z-index: auto;
+       top: auto;
+    }
+
+    .ad-details {
+        position: static;
+        margin-top: 0;
+        z-index: auto;
     }
 
     .main-image img {
@@ -410,11 +280,6 @@ header {
 
     .thumbnail-grid {
         grid-template-columns: repeat(5, 1fr);
-    }
-
-    .ad-details {
-        position: static; /* Ensure details are not sticky */
-        margin-top: 0;
     }
 
     .ad-title {
@@ -428,175 +293,65 @@ header {
 
 /* Tablets */
 @media (max-width: 768px) {
-    header {
-        padding: 0.8rem 1rem;
-    }
-    .home-links {
-        display: none;
-    }
-    .main-links {
-         gap: 1rem;
-    }
-    .post-ad-btn {
-        padding: 0.4rem 1rem;
-        font-size: 0.9rem;
-    }
-     .account-dropdown .dropdown-toggle img {
-        width: 28px;
-        height: 28px;
-    }
-
     .ad-detail-container {
         margin: 1.5rem auto;
         gap: 1rem;
     }
-
     .main-image img {
         max-height: 400px;
         aspect-ratio: 3 / 2;
     }
-
     .thumbnail-grid {
         grid-template-columns: repeat(4, 1fr);
         gap: 0.5rem;
     }
-
     .thumbnail {
         padding: 2px;
     }
-
-
     .ad-details {
         padding: 1rem;
     }
-
-    .ad-title {
-        font-size: 1.4rem;
-    }
-
-    .ad-price {
-        font-size: 1.3rem;
-    }
-
-    .location-info, .description p {
-        font-size: 0.95rem;
-    }
-    .category-tag, .subcategory-tag {
-        font-size: 0.8rem;
-        padding: 0.25rem 0.7rem;
-    }
-    .description h3 {
-        font-size: 1.1rem;
-    }
-
-    /* Responsive Chat Button */
-    .chat-button-detail {
-        padding: 0.8rem 1.2rem;
-        font-size: 0.95rem;
-        gap: 0.6rem;
-        margin-top: 1.5rem; /* Adjust margin if needed */
-    }
-
-    /* Fixed Chat Box adjustment */
-     #chatBox {
-        width: 280px;
-        bottom: 10px;
-        right: 10px;
-        left: auto; /* Ensure it stays right */
-        margin: 0;
-    }
-    #chatBox #messages {
-        height: 250px;
-    }
+    .ad-title { font-size: 1.4rem; }
+    .ad-price { font-size: 1.3rem; }
+    .location-info, .description p { font-size: 0.95rem; }
+    .category-tag, .subcategory-tag { font-size: 0.8rem; padding: 0.25rem 0.7rem; }
+    .description h3 { font-size: 1.1rem; }
+    .chat-button-detail { padding: 0.8rem 1.2rem; font-size: 0.95rem; gap: 0.6rem; margin-top: 1.5rem; }
+    #chatBox { width: 280px; bottom: 10px; right: 10px; left: auto; margin: 0; }
+    #chatBox #messages { height: 250px; }
 }
 
 /* Mobile Phones */
 @media (max-width: 480px) {
-     header {
-        padding: 0.5rem;
-    }
-    .logo { max-width: 35px; }
-    .company-name { font-size: 1.2rem; }
-    .post-ad-btn { padding: 0.3rem 0.8rem; font-size: 0.8rem; }
-     .account-dropdown .dropdown-toggle img { width: 24px; height: 24px; }
-     .main-links { gap: 0.5rem; }
-
     .ad-detail-container {
         margin: 1rem auto;
         padding: 0 0.5rem;
     }
-
-     .main-image img {
+    .main-image img {
         max-height: 300px;
         aspect-ratio: 1 / 1;
     }
-
     .thumbnail-grid {
         grid-template-columns: repeat(3, 1fr);
     }
-
     .ad-details {
         border-radius: 6px;
     }
-
-     .price-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.2rem;
-        padding-bottom: 0.5rem;
-    }
+     .price-header { flex-direction: column; align-items: flex-start; gap: 0.2rem; padding-bottom: 0.5rem; }
      .ad-price { margin-left: 0; font-size: 1.2rem;}
      .ad-title { font-size: 1.3rem; }
-
-     .location-info, .description p {
-        font-size: 0.9rem;
-    }
-     .description h3 {
-        font-size: 1rem;
-    }
-
-    /* Responsive Chat Button */
-    .chat-button-detail {
-        padding: 0.7rem 1rem;
-        font-size: 0.9rem;
-        gap: 0.5rem;
-        margin-top: 1.2rem;
-        border-radius: 30px;
-    }
-
-    /* Fixed Chat Box adjustment */
-     #chatBox {
-        width: calc(100% - 10px); /* Take almost full width */
-        max-width: 300px; /* But limit max width */
-        bottom: 5px;
-        right: 5px;
-        left: 5px;
-        margin: 0 auto; /* Center it horizontally */
-    }
-     #chatBox #messages {
-        height: 220px; /* Adjust height for smaller screen */
-    }
+     .location-info, .description p { font-size: 0.9rem; }
+     .description h3 { font-size: 1rem; }
+     .chat-button-detail { padding: 0.7rem 1rem; font-size: 0.9rem; gap: 0.5rem; margin-top: 1.2rem; border-radius: 30px; }
+     #chatBox { width: calc(100% - 10px); max-width: 300px; bottom: 5px; right: 5px; left: 5px; margin: 0 auto; }
+     #chatBox #messages { height: 220px; }
 }
 
-/* --- Additional Helper Styles --- */
-/* Optional: Add focus style for accessibility */
-.chat-button-detail:focus-visible {
-    outline: 2px solid #00b8d4; /* Visible focus ring */
-    outline-offset: 2px;
-}
-
-/* Ensure sticky positioning works as expected */
-/* You might need vendor prefixes for older browsers if supporting them */
+/* Sticky Positioning for Large Screens */
 .image-gallery {
-    position: -webkit-sticky; /* Safari */
-    position: sticky;
-    top: 1rem; /* Adjust based on header height or desired offset */
-    align-self: start; /* Important for sticky within grid */
-    z-index: 10; /* Keep it below header maybe */
-}
-
-@media (max-width: 1024px) {
-    .image-gallery {
-        position: static; /* Turn off sticky when columns stack */
-    }
+    display: flex;
+    flex-direction: column;
+    top: 1rem;
+    align-self: start;
+    z-index: 10;
 }
